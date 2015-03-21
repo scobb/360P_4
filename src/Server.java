@@ -2,10 +2,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -17,8 +21,40 @@ import java.util.concurrent.Executors;
  *
  */
 public class Server {
-	/**TCPHandler - inner class that will handle TCP requests so TCPListener can continue listening
+	public class CSRequest {
+		private int id, clock;
+		public CSRequest(int id, int clock){
+			
+		}
+	}
+	/**ServerRecord - inner class to keep track of other servers
 	 * 
+	 * @author scobb
+	 *
+	 */
+	public class ServerRecord {
+		private InetAddress addr;
+		private int port;
+		private int clock;
+		public int getClock() {
+			return clock;
+		}
+		public void setClock(int clock) {
+			this.clock = clock;
+		}
+		public ServerRecord(String configStr){
+			String[] splitAddress = configStr.split(":");
+			try {
+				addr = InetAddress.getByName(splitAddress[0]);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+			port = Integer.parseInt(splitAddress[1]);
+			clock = 0;
+		}
+	}
+	/**TCPHandler
+	 * Runnable to handle incoming messages
 	 * @author scobb
 	 *
 	 */
@@ -46,86 +82,13 @@ public class Server {
 			} 
 		}
 	}
-	/**TCPListener - class that will listen on the assigned port for TCP requests
-	 * 
-	 * @author scobb
-	 *
-	 */
-	public class TCPListener implements Runnable{
-		// base constructor - nothing to do
-		public TCPListener(){};
-		@Override
-		public void run() {
-			// use outer class's tcpSocket to listen
-			Socket s;
-			try {
-				while ( (s = tcpSocket.accept()) != null) {
-					// when we get a connection, sping off a thread to handle it
-					threadpool.submit(new TCPHandler(s));
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-		}
-		
-	}
-	/**UDPListener - Will listen for UDP requests
-	 * 
-	 * @author scobb
-	 *
-	 */
-	public class UDPListener implements Runnable{
-		// member vars
-		int port;
-		Server myServer;
-		int len = 1024;
-		
-		// empty constructor
-		public UDPListener(){
-		}
-
-		@Override
-		public void run() {
-			// listen on the outer class's UDP socket for a connection.
-			try {
-				while (true){
-					// allocate a buffer and object for client
-					byte[] buf  = new byte[len];
-					DatagramPacket datapacket = new DatagramPacket(buf, buf.length);
-					
-					// wait for client to transmit something
-					udpSocket.receive(datapacket);
-					
-					// read client's info into string
-					String req = new String (datapacket.getData());
-					
-					// process client's request
-					String resp = Server.this.processRequest(req);
-					
-					// convert string response into a byte array
-					byte[] respBytes = resp.getBytes();
-					
-					// build and send response packet
-					DatagramPacket returnpacket = new DatagramPacket (
-							respBytes,
-							respBytes.length,
-							datapacket.getAddress () ,
-							datapacket.getPort());
-					udpSocket.send(returnpacket);
-				}
-				
-			} catch (Exception exc){
-				System.out.println("Exception: " + exc.getMessage());
-			}
-				
-		}
-	}
 
 	// member variables
 	private Map<String, String> bookMap; 
 	private ServerSocket tcpSocket;
-	private DatagramSocket udpSocket;
+	private int numServers;
+	private int serverId;
+	private List<ServerRecord> serverRecords;
 	ExecutorService threadpool;
 	
 	// constants
@@ -139,6 +102,7 @@ public class Server {
 	// empty constructor - instantiate the map that will track who has what books
 	public Server(){
 		bookMap = new HashMap<String, String>();
+		serverRecords = new ArrayList<ServerRecord>();
 	}
 	
 	/**parseConfig - handles the first line entered to server
@@ -149,37 +113,55 @@ public class Server {
 		// split based on whitespace
 		String[] configList = config.split("\\s+");
 		
+		serverId = Integer.parseInt(configList[0]);
+		numServers = Integer.parseInt(configList[1]);
+	
 		// populate book map, 1-based indexing, with all books available
-		int numBooks = Integer.parseInt(configList[0]);
+		int numBooks = Integer.parseInt(configList[2]);
 		for (int i = 1; i <= numBooks; ++i){
 			bookMap.put("b" + i,  AVAILABLE);
 		}
 		
-		// set up udp and tcp sockets for listeners to use
-		int udpPort = Integer.parseInt(configList[1]);
-		int tcpPort = Integer.parseInt(configList[2]);
+	}
+	/**startServer - starts a server on given port if server is on localhost
+	 * 
+	 * pre-condition: serverRecords, serverId populated
+	 */
+	public void startServer(){
 		try {
-			udpSocket = new DatagramSocket(udpPort);
-			//System.out.println("Listening for UDP on : " + udpPort);
-			tcpSocket = new ServerSocket(tcpPort);
-			//System.out.println("Listening for TCP on : " + tcpPort);
-		} catch (SocketException e) {
-			e.printStackTrace();
+			InetAddress addr = serverRecords.get(serverId).addr;
+			if (addr.isAnyLocalAddress() || addr.isLoopbackAddress()) {
+				System.out.println("Starting a server on port " + serverRecords.get(serverId).port);
+				tcpSocket = new ServerSocket(serverRecords.get(serverId).port);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	/**listen - blocking method that listens for UDP and TCP input
+	
+	/**addServerRecord - adds a record for a given configuration string
+	 * 
+	 * @param s - configuration string for a server
+	 */
+	public void addServerRecord(String s){
+		serverRecords.add(new ServerRecord(s));
+	}
+	/**listen - blocking method that listens for TCP input
 	 * 
 	 */
 	public void listen(){
 		threadpool = Executors.newCachedThreadPool();
-		UDPListener udp = new UDPListener();
-		threadpool.submit(udp);
-		TCPListener tcp = new TCPListener();
-		threadpool.submit(tcp);
-		while (true);
+		Socket s;
+		try {
+			while ( (s = tcpSocket.accept()) != null) {
+				// when we get a connection, sping off a thread to handle it
+				threadpool.submit(new TCPHandler(s));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
+
 	/**processRequest - method that updates bookMap based on a client's request.
 	 * Synchronized to protect bookMap from multiple concurrent tinkerers.
 	 * 
@@ -187,6 +169,9 @@ public class Server {
 	 * @return String that holds response to client
 	 */
 	public synchronized String processRequest(String request){
+		// TODO - remove synchronize
+		// TODO - send message
+		// TODO - 
 		// parse request into component parts
 		String[] requestSplit = request.split("\\s+");
 		String client = requestSplit[0].trim();
@@ -237,7 +222,15 @@ public class Server {
 		// first line will be configuration
 		s.parseConfig(sc.nextLine());
 		
-		// after that, we'll poll for TCP and UDP communications
+		// add records of all servers
+		for (int i = 0; i < s.numServers; ++i){
+			s.addServerRecord(sc.nextLine());
+		}
+		
+		// start a server
+		s.startServer();
+		
+		// after that, we'll poll for TCP communications
 		s.listen();
 	}
 }
