@@ -21,6 +21,10 @@ public class ClientRequest {
 	public String getReqString() {
 		return reqString;
 	}
+	
+	public Socket getSocket(){
+		return s;
+	}
 
 	public Server getServer() {
 		return server;

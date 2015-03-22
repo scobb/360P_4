@@ -60,6 +60,10 @@ public class Server {
 	}
 
 	// getters
+	public int getNumServed() {
+		return numServed;
+	}
+
 	public ExecutorService getThreadpool() {
 		return threadpool;
 	}
@@ -82,6 +86,26 @@ public class Server {
 
 	public int getServerId() {
 		return serverId;
+	}
+	
+	public ServerSocket getTcpSocket(){
+		return tcpSocket;
+	}
+	
+	public void clientServed(){
+		++numServed;
+	}
+
+	public ScheduledFailure getCurrentScheduledFailure() {
+		return currentScheduledFailure;
+	}
+	
+	/**fail - clears state and sleeps for requisite period
+	 * 
+	 * 
+	 */
+	public void fail(){
+		
 	}
 
 	/**
@@ -173,7 +197,6 @@ public class Server {
 	 * @return String that holds response to client
 	 */
 	public String processRequest(String request) {
-		// TODO - remove synchronize
 		// TODO - send message
 		// TODO - add HEADER to formatted messages for both clients and servers
 		// parse request into component parts
