@@ -117,7 +117,7 @@ public class Server {
 	 * 
 	 * 
 	 */
-	public void fail() {
+	public synchronized void fail() {
 		// update state
 		crashed = true;
 
@@ -246,7 +246,7 @@ public class Server {
 	 *            String from client, format: <clientid> <bookid> <directive>
 	 * @return String that holds response to client
 	 */
-	public String processRequest(String request) {
+	public synchronized String processRequest(String request) {
 		// parse request into component parts
 		String[] requestSplit = request.split("\\s+");
 		String client = requestSplit[0].trim();

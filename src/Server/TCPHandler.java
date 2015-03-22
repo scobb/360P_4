@@ -50,7 +50,7 @@ public class TCPHandler implements Runnable {
 				
 				out.println("OK");
 			} else {
-				// remote server finished serving---update database
+				// remote server finished serving---update database to stay in line
 				server.updateFromRemoteComplete();
 				
 				// if it's my turn, serve now

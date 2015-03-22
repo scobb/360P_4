@@ -130,6 +130,8 @@ public class Client {
 
 		// configure using the first line of input
 		c.parseConfig(sc.nextLine());
+		
+		// TODO - add server records
 
 		// go until user enters an empty line.
 		while (true) {
