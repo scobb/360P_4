@@ -1,14 +1,14 @@
-package Server;
+package server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import Message.FinishedMessage;
-import Message.RequestMessage;
-import Record.ClientRecord;
-import Record.ServerRecord;
+import record.ClientRecord;
+import record.ServerRecord;
+import message.FinishedMessage;
+import message.RequestMessage;
 
 public class TCPHandler implements Runnable {
 	// member vars
@@ -45,39 +45,16 @@ public class TCPHandler implements Runnable {
 		String directive = splitMsg[1];
 		try {
 			if (directive == "R") {
-				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				// request -- send back an acknowledgement
+				PrintWriter out = new PrintWriter(socket.getOutputStream());
+				
 				out.println("OK");
 			} else {
-				// other guy finished---update database
-				server.processRequest(server.getClientRequests().remove().getReqString());
+				// remote server finished serving---update database
+				server.updateFromRemoteComplete();
 				
-				// am i next?
-				if (server.getClientRequests().peek().isValid()
-						&& server.getClientRequests().peek().getServer() == server) {
-					// time to process this request
-					ClientRecord req = server.getClientRequests().remove();
-					String result = server.processRequest(req.getReqString());
-					
-					// send response to appropriate client
-					PrintWriter out = new PrintWriter(req.getSocket().getOutputStream());
-					out.println(result);
-					out.flush();
-					out.close();
-					req.getSocket().close();
-					
-					// request processed. Send the finished message.
-					for (ServerRecord sr: server.getServerRecords()){
-						if (!sr.equals(server)) {
-							// send finished msg
-							server.getThreadpool().submit(new FinishedMessage(server, sr));
-						}
-					}
-					server.clientServed();
-					if (server.getCurrentScheduledFailure() != null && server.getCurrentScheduledFailure().hasFailed(server.getNumServed())){
-						server.fail();
-					}
-				}
+				// if it's my turn, serve now
+				server.serveIfReady();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -1,21 +1,20 @@
-package Message;
+package message;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import Record.ClientRecord;
-import Record.ServerRecord;
-import Server.Server;
+import record.ClientRecord;
+import record.ServerRecord;
+import server.Server;
 
 
 public class RequestMessage extends Message{
 	ClientRecord cr;
 
 	public RequestMessage(Server from, ClientRecord cr, ServerRecord to) {
-		this.from = from;
+		super(from, to);
 		this.cr = cr;
-		this.to = to;
 	}
 
 	@Override

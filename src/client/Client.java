@@ -1,3 +1,4 @@
+package client;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -15,15 +16,12 @@ import java.util.Scanner;
 
 public class Client {
 	// constants
-	private static final String TCP = "T";
-	private static final String UDP = "U";
 	private static final String SLEEP = "sleep";
 	private static final int len = 1024;
 
 	// members
 	private String id;
 	private InetAddress add;
-	private byte[] rbuffer = new byte[len];
 
 	// no-arg constructor
 	public Client() {
@@ -73,15 +71,10 @@ public class Client {
 			String book = cmdSplit[0];
 			String directive = cmdSplit[1];
 			int port = Integer.parseInt(cmdSplit[2]);
-			String protocol = cmdSplit[3];
 			
 			String request = id + " " + book + " " + directive;
-			// dependent on protocol, process in two different manners
-			if (protocol.equals(UDP)) {
-				processUdp(request, port);
-			} else {
-				processTcp(request, port);
-			}
+			// process request
+			processTcp(request, port);
 		}
 
 	}
@@ -111,41 +104,6 @@ public class Client {
 			s.close();
 			in.close();
 			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	/**processUdp
-	 * 
-	 * @param send String we'll send
-	 * @param port Integer port the server will be listening on
-	 */
-	public void processUdp(String send, int port) {
-		DatagramPacket sPacket, rPacket;
-		DatagramSocket datasocket;
-		try {
-			// declare new instance of socket
-			datasocket = new DatagramSocket();
-			
-			// convert string to byte array
-			byte[] buffer = send.getBytes();
-			
-			// build and send datagram packet
-			sPacket = new DatagramPacket(buffer, buffer.length, add, port);
-			datasocket.send(sPacket);
-			
-			// wait for response
-			rPacket = new DatagramPacket(rbuffer, rbuffer.length);
-			datasocket.receive(rPacket);
-			
-			// parse response into a string
-			String retstring = new String(rPacket.getData(), 0,
-					rPacket.getLength());
-			
-			// print string to stdout
-			System.out.println(retstring);
-		} catch (SocketException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

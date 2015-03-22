@@ -1,16 +1,21 @@
-package Message;
+package message;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import Record.ServerRecord;
-import Server.Server;
+import record.ServerRecord;
+import server.Server;
 
 public abstract class Message implements Runnable {
 	protected Server from;
 	protected ServerRecord to;
+	
+	public Message(Server from, ServerRecord to){
+		this.from = from;
+		this.to = to;
+	}
 
 	public abstract void communicate(Scanner in, PrintWriter out);
 
@@ -25,7 +30,7 @@ public abstract class Message implements Runnable {
 			Scanner in = new Scanner(s.getInputStream());
 			PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
-			// construct message
+			// implemenetation-specific communication
 			communicate(in, out);
 			
 			// clean up

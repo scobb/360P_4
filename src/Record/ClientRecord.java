@@ -1,8 +1,8 @@
-package Record;
+package record;
 
 import java.net.Socket;
 
-import Server.Server;
+import server.Server;
 
 public class ClientRecord {
 	private Socket s;

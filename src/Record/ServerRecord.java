@@ -1,9 +1,9 @@
-package Record;
+package record;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import Server.Server;
+import server.Server;
 
 public class ServerRecord {
 	private InetAddress addr;

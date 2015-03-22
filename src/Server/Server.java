@@ -1,4 +1,4 @@
-package Server;
+package server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,9 +18,10 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import Record.ClientRecord;
-import Record.FailureRecord;
-import Record.ServerRecord;
+import record.ClientRecord;
+import record.FailureRecord;
+import record.ServerRecord;
+import message.FinishedMessage;
 
 /**
  * Server - Implements a concurrent UDP and TCP server.
@@ -43,8 +44,6 @@ public class Server {
 	private FailureRecord currentScheduledFailure;
 	private ExecutorService threadpool;
 
-	// constants
-	private static final int INVALID = -1;
 	private final String RESERVE = "reserve";
 	private final String RETURN = "return";
 	private final String FAIL = "fail ";
@@ -91,25 +90,26 @@ public class Server {
 	public int getServerId() {
 		return serverId;
 	}
-	
-	public ServerSocket getTcpSocket(){
+
+	public ServerSocket getTcpSocket() {
 		return tcpSocket;
 	}
-	
-	public void clientServed(){
+
+	public void clientServed() {
 		++numServed;
 	}
 
 	public FailureRecord getCurrentScheduledFailure() {
 		return currentScheduledFailure;
 	}
-	
-	/**fail - clears state and sleeps for requisite period
+
+	/**
+	 * fail - clears state and sleeps for requisite period
 	 * 
 	 * 
 	 */
-	public void fail(){
-		
+	public void fail() {
+
 	}
 
 	/**
@@ -241,6 +241,57 @@ public class Server {
 
 		// return the string in proper format
 		return prefix + client + " " + book;
+	}
+	/**updateFromRemoteComplete - to be called when a remote server has completed a transaction
+	 * 
+	 */
+	public void updateFromRemoteComplete() {
+		// remove next from queue and process, but don't output
+		processRequest(getClientRequests().remove().getReqString());
+	}
+
+	/**
+	 * serveIfReady - if next request on the Q is mine and it has been
+	 * acknowledged, process it
+	 * 
+	 */
+	public void serveIfReady() {
+		if (getClientRequests().peek().isValid()
+				&& getClientRequests().peek().getServer() == this) {
+			// time to process this request
+			ClientRecord req = getClientRequests().remove();
+			String result = processRequest(req.getReqString());
+
+			// send response to appropriate client
+			PrintWriter out;
+			try {
+				out = new PrintWriter(req.getSocket().getOutputStream());
+				out.println(result);
+				out.flush();
+				out.close();
+				req.getSocket().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			// request processed. Send the finished message.
+			for (ServerRecord sr : getServerRecords()) {
+				if (!sr.equals(this)) {
+					// send finished msg to each server that isn't me
+					getThreadpool().submit(new FinishedMessage(this, sr));
+				}
+			}
+
+			// update number of clients served
+			clientServed();
+
+			// is it time to fail?
+			if (getCurrentScheduledFailure() != null
+					&& getCurrentScheduledFailure().hasFailed(getNumServed())) {
+				fail();
+			}
+		}
+
 	}
 
 	public static void main(String[] args) {

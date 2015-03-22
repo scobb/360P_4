@@ -1,4 +1,4 @@
-package Record;
+package record;
 
 public class FailureRecord {
 	private int k;
