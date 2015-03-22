@@ -1,4 +1,5 @@
 package Server;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
@@ -24,159 +25,6 @@ import java.util.concurrent.Executors;
  *
  */
 public class Server {
-
-	/**
-	 * ServerRecord - inner class to keep track of other servers
-	 * 
-	 * @author scobb
-	 *
-	 */
-
-	public class ClientRequest {
-		private Socket s;
-		private String reqString;
-		int server;
-		int clock;
-		int acksReceived;
-
-		public ClientRequest(Socket s, int server, int clock, String reqString) {
-			this.s = s;
-			this.reqString = reqString;
-			this.server = server;
-			this.clock = clock;
-			acksReceived = 0;
-		}
-
-		public void ackReceived() {
-			++acksReceived;
-		}
-
-		public boolean isValid() {
-			return acksReceived >= Server.this.numServers;
-		}
-
-		public int compareTo(ClientRequest other) {
-			if (this.clock < other.clock
-					|| (this.clock == other.clock && this.server < other.server)) {
-				return -1;
-			}
-			return 1;
-		}
-	}
-
-	/**
-	 * TCPHandler Runnable to handle incoming messages
-	 * 
-	 * @author scobb
-	 *
-	 */
-	public class TCPHandler implements Runnable {
-		// member vars
-		Socket socket;
-
-		// constructor: listener will give us a socket to work with.
-		public TCPHandler(Socket s) {
-			this.socket = s;
-		}
-
-		@Override
-		public void run() {
-			try {
-				Scanner in = new Scanner(socket.getInputStream());
-				String msg = in.nextLine();
-				// determine if this message came from client or server
-				if (msg.split(" ")[0] == "SERVER") {
-					this.handleServerMessage(msg);
-				} else {
-					this.handleClientMessage(msg);
-				}
-				String resp = Server.this.processRequest(msg);
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		private void handleServerMessage(String msg) {
-			// if from server, is it an ack, req, or finished?
-			String[] splitMsg = msg.split(" ");
-			String directive = splitMsg[1];
-			try {
-				if (directive == "R") {
-					PrintWriter out = new PrintWriter(socket.getOutputStream());
-					// request -- send back an acknowledgement
-					out.println("OK");
-				} else {
-					// other guy finished--am i at top of q, and have I received
-					// all acks?
-					Server.this.clientRequests.remove();
-					if (Server.this.clientRequests.peek().isValid()
-							&& Server.this.clientRequests.peek().server == Server.this.serverId) {
-						// time to process this request
-						Server.this.processRequest(Server.this.clientRequests
-								.remove().reqString);
-						
-						// TODO - request processed. Send the finished message.
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		}
-
-		private void handleClientMessage(String msg) {
-			ClientRequest cr = new ClientRequest(socket, Server.this.serverId,
-					Server.this.clock, msg);
-			Server.this.clientRequests.add(cr);
-
-			// send requests to other servers - worth spinning off a thread?
-			for (ServerRecord s : Server.this.serverRecords) {
-				Server.this.threadpool
-						.submit(new AcknowledgementRequest(cr, s));
-			}
-		}
-	}
-
-	public class AcknowledgementRequest implements Runnable {
-		ClientRequest cr;
-		ServerRecord sr;
-
-		public AcknowledgementRequest(ClientRequest cr, ServerRecord sr) {
-			this.cr = cr;
-			this.sr = sr;
-		}
-
-		@Override
-		public void run() {
-			Socket s = null;
-			try {
-				// talk to the server on the socket
-				s = new Socket(sr.getAddr(), sr.getPort());
-
-				// we'll communicate through streams: scanner and printwriter
-				Scanner in = new Scanner(s.getInputStream());
-				PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-
-				// construct message
-				out.println("SERVER R");
-
-				// wait for acknowledgement -- TODO, timeout here?
-				in.nextLine();
-
-				// add acknowledgement
-				cr.ackReceived();
-
-				// clean up -- not sure if these are redundant. Stream closes if
-				// any is called.
-				s.close();
-				in.close();
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
 
 	// member variables
 	private Map<String, String> bookMap;
@@ -211,6 +59,31 @@ public class Server {
 		clock = 0;
 	}
 
+	// getters
+	public ExecutorService getThreadpool() {
+		return threadpool;
+	}
+
+	public int getClock() {
+		return clock;
+	}
+
+	public PriorityQueue<ClientRequest> getClientRequests() {
+		return clientRequests;
+	}
+
+	public List<ServerRecord> getServerRecords() {
+		return serverRecords;
+	}
+
+	public int getNumServers() {
+		return numServers;
+	}
+
+	public int getServerId() {
+		return serverId;
+	}
+
 	/**
 	 * parseConfig - handles the first line entered to server
 	 * 
@@ -243,7 +116,8 @@ public class Server {
 			if (addr.isAnyLocalAddress() || addr.isLoopbackAddress()) {
 				System.out.println("Starting a server on port "
 						+ serverRecords.get(serverId).getPort());
-				tcpSocket = new ServerSocket(serverRecords.get(serverId).getPort());
+				tcpSocket = new ServerSocket(serverRecords.get(serverId)
+						.getPort());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -283,7 +157,7 @@ public class Server {
 		try {
 			while ((s = tcpSocket.accept()) != null) {
 				// when we get a connection, sping off a thread to handle it
-				threadpool.submit(new TCPHandler(s));
+				threadpool.submit(new TCPHandler(s, this));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
