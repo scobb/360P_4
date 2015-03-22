@@ -5,6 +5,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
+import Message.FinishedMessage;
+import Message.RequestMessage;
+import Record.ClientRecord;
+import Record.ServerRecord;
+
 public class TCPHandler implements Runnable {
 	// member vars
 	Socket socket;
@@ -51,7 +56,7 @@ public class TCPHandler implements Runnable {
 				if (server.getClientRequests().peek().isValid()
 						&& server.getClientRequests().peek().getServer() == server) {
 					// time to process this request
-					ClientRequest req = server.getClientRequests().remove();
+					ClientRecord req = server.getClientRequests().remove();
 					String result = server.processRequest(req.getReqString());
 					
 					// send response to appropriate client
@@ -65,7 +70,7 @@ public class TCPHandler implements Runnable {
 					for (ServerRecord sr: server.getServerRecords()){
 						if (!sr.equals(server)) {
 							// send finished msg
-							server.getThreadpool().submit(new FinishedMessage(sr));
+							server.getThreadpool().submit(new FinishedMessage(server, sr));
 						}
 					}
 					server.clientServed();
@@ -81,14 +86,14 @@ public class TCPHandler implements Runnable {
 	}
 
 	private void handleClientMessage(String msg) {
-		ClientRequest cr = new ClientRequest(socket, server,
+		ClientRecord cr = new ClientRecord(socket, server,
 				server.getClock(), msg);
 		server.getClientRequests().add(cr);
 
 		// send requests to other servers - worth spinning off a thread?
 		for (ServerRecord s : server.getServerRecords()) {
 			server.getThreadpool()
-					.submit(new AcknowledgementRequest(cr, s));
+					.submit(new RequestMessage(server, cr, s));
 		}
 	}
 }

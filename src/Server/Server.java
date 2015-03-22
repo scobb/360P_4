@@ -18,6 +18,10 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import Record.ClientRecord;
+import Record.FailureRecord;
+import Record.ServerRecord;
+
 /**
  * Server - Implements a concurrent UDP and TCP server.
  * 
@@ -34,9 +38,9 @@ public class Server {
 	private int serverId;
 	private int numServed;
 	private List<ServerRecord> serverRecords;
-	private List<ScheduledFailure> scheduledFailures;
-	private PriorityQueue<ClientRequest> clientRequests;
-	private ScheduledFailure currentScheduledFailure;
+	private List<FailureRecord> scheduledFailures;
+	private PriorityQueue<ClientRecord> clientRequests;
+	private FailureRecord currentScheduledFailure;
 	private ExecutorService threadpool;
 
 	// constants
@@ -52,8 +56,8 @@ public class Server {
 	public Server() {
 		bookMap = new HashMap<String, String>();
 		serverRecords = new ArrayList<ServerRecord>();
-		scheduledFailures = new ArrayList<ScheduledFailure>();
-		clientRequests = new PriorityQueue<ClientRequest>();
+		scheduledFailures = new ArrayList<FailureRecord>();
+		clientRequests = new PriorityQueue<ClientRecord>();
 		currentScheduledFailure = null;
 		numServed = 0;
 		clock = 0;
@@ -72,7 +76,7 @@ public class Server {
 		return clock;
 	}
 
-	public PriorityQueue<ClientRequest> getClientRequests() {
+	public PriorityQueue<ClientRecord> getClientRequests() {
 		return clientRequests;
 	}
 
@@ -96,7 +100,7 @@ public class Server {
 		++numServed;
 	}
 
-	public ScheduledFailure getCurrentScheduledFailure() {
+	public FailureRecord getCurrentScheduledFailure() {
 		return currentScheduledFailure;
 	}
 	
@@ -158,7 +162,7 @@ public class Server {
 		String[] split = s.split("\\s+");
 		int k = Integer.parseInt(split[0]);
 		int delta = Integer.parseInt(split[1]);
-		scheduledFailures.add(new ScheduledFailure(k, delta));
+		scheduledFailures.add(new FailureRecord(k, delta));
 	}
 
 	/**

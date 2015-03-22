@@ -1,15 +1,17 @@
-package Server;
+package Record;
 
 import java.net.Socket;
 
-public class ClientRequest {
+import Server.Server;
+
+public class ClientRecord {
 	private Socket s;
 	private String reqString;
 	private Server server;
 	int clock;
 	int acksReceived;
 
-	public ClientRequest(Socket s, Server server, int clock,
+	public ClientRecord(Socket s, Server server, int clock,
 			String reqString) {
 		this.s = s;
 		this.reqString = reqString;
@@ -38,7 +40,7 @@ public class ClientRequest {
 		return acksReceived >= this.server.getNumServers();
 	}
 
-	public int compareTo(ClientRequest other) {
+	public int compareTo(ClientRecord other) {
 		if (this.clock < other.clock
 				|| (this.clock == other.clock && this.server.getServerId() < other.server.getServerId())) {
 			return -1;

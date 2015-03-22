@@ -1,10 +1,10 @@
-package Server;
+package Record;
 
-public class ScheduledFailure {
+public class FailureRecord {
 	private int k;
 	private int delta;
 
-	public ScheduledFailure(int k, int delta) {
+	public FailureRecord(int k, int delta) {
 		this.k = k;
 		this.delta = delta;
 	}
