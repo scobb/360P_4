@@ -1,7 +1,5 @@
 package message;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.Scanner;
 
 import record.ClientRecord;
@@ -27,6 +25,12 @@ public class RequestMessage extends Message{
 		// add acknowledgement
 		cr.ackReceived();
 		
+	}
+
+	@Override
+	public void handleTimeout() {
+		// if that server has crashed, we can count them as acknowledging.
+		cr.ackReceived();
 	}
 
 }

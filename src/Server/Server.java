@@ -11,6 +11,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -24,7 +25,7 @@ import record.ServerRecord;
 import message.FinishedMessage;
 
 /**
- * Server - Implements a concurrent UDP and TCP server.
+ * Server - Implements a distributed TCP server.
  * 
  * @author scobb
  *
@@ -32,23 +33,30 @@ import message.FinishedMessage;
 public class Server {
 
 	// member variables
-	private Map<String, String> bookMap;
-	private ServerSocket tcpSocket;
 	private int numServers;
 	private int clock;
 	private int serverId;
 	private int numServed;
-	private List<ServerRecord> serverRecords;
-	private List<FailureRecord> scheduledFailures;
-	private PriorityQueue<ClientRecord> clientRequests;
-	private FailureRecord currentScheduledFailure;
+	private ServerSocket tcpSocket;
 	private ExecutorService threadpool;
 
+	// permanent state - not lost on crash
+	private boolean crashed;
+	private List<ServerRecord> serverRecords;
+	private List<FailureRecord> scheduledFailures;
+	private FailureRecord currentScheduledFailure;
+
+	// volatile state - lost on crash
+	private Map<String, String> bookMap;
+	private PriorityQueue<ClientRecord> clientRequests;
+
+	// constants
 	private final String RESERVE = "reserve";
 	private final String RETURN = "return";
 	private final String FAIL = "fail ";
 	private final String AVAILABLE = "available";
 	private final String FREE = "free ";
+	public static final int TIMEOUT_MS = 100;
 
 	// empty constructor - instantiate the map that will track who has what
 	// books
@@ -60,6 +68,7 @@ public class Server {
 		currentScheduledFailure = null;
 		numServed = 0;
 		clock = 0;
+		crashed = false;
 	}
 
 	// getters
@@ -109,7 +118,41 @@ public class Server {
 	 * 
 	 */
 	public void fail() {
+		// update state
+		crashed = true;
 
+		// clear state - client requests become empty.
+		clientRequests.clear();
+
+		// also, make all books available again
+		for (String bookKey : bookMap.keySet()) {
+			bookMap.put(bookKey, AVAILABLE);
+		}
+
+		// sleep
+		try {
+			Thread.sleep(currentScheduledFailure.getDelta());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		// update failure list
+		updateCurrentScheduledFailure();
+		// TODO - send message to other servers to send me a list of client
+		// records, books
+		// should receive ALL of these before resuming service (excluding
+		// timeouts from crashed)
+
+		// no longer crashed.
+		crashed = false;
+	}
+
+	public void updateCurrentScheduledFailure() {
+		if (scheduledFailures.size() > 0) {
+			currentScheduledFailure = scheduledFailures.remove(0);
+		} else {
+			currentScheduledFailure = null;
+		}
 	}
 
 	/**
@@ -184,8 +227,11 @@ public class Server {
 		Socket s;
 		try {
 			while ((s = tcpSocket.accept()) != null) {
-				// when we get a connection, sping off a thread to handle it
-				threadpool.submit(new TCPHandler(s, this));
+				// when we get a connection, spin off a thread to handle it if
+				// we're online
+				if (!crashed) {
+					threadpool.submit(new TCPHandler(s, this));
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -201,8 +247,6 @@ public class Server {
 	 * @return String that holds response to client
 	 */
 	public String processRequest(String request) {
-		// TODO - send message
-		// TODO - add HEADER to formatted messages for both clients and servers
 		// parse request into component parts
 		String[] requestSplit = request.split("\\s+");
 		String client = requestSplit[0].trim();
@@ -242,7 +286,10 @@ public class Server {
 		// return the string in proper format
 		return prefix + client + " " + book;
 	}
-	/**updateFromRemoteComplete - to be called when a remote server has completed a transaction
+
+	/**
+	 * updateFromRemoteComplete - to be called when a remote server has
+	 * completed a transaction
 	 * 
 	 */
 	public void updateFromRemoteComplete() {
@@ -313,7 +360,7 @@ public class Server {
 		while (sc.hasNext()) {
 			s.addScheduledFailure(sc.nextLine());
 		}
-		s.currentScheduledFailure = s.scheduledFailures.remove(0);
+		s.updateCurrentScheduledFailure();
 
 		// start a server
 		s.startServer();

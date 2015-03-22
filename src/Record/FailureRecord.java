@@ -9,6 +9,10 @@ public class FailureRecord {
 		this.delta = delta;
 	}
 
+	public int getDelta() {
+		return delta;
+	}
+
 	public boolean hasFailed(int numServed) {
 		return numServed >= this.k;
 	}

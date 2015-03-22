@@ -1,8 +1,6 @@
 package message;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.Scanner;
 
 import record.ServerRecord;
@@ -16,6 +14,11 @@ public class FinishedMessage extends Message {
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
 		out.println("SERVER F " + from.getClock());
+	}
+
+	@Override
+	public void handleTimeout() {
+		// nothing to do
 	}
 
 }
