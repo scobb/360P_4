@@ -1,3 +1,4 @@
+package Server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
@@ -30,30 +31,6 @@ public class Server {
 	 * @author scobb
 	 *
 	 */
-	public class ServerRecord {
-		private InetAddress addr;
-		private int port;
-		private int clock;
-
-		public int getClock() {
-			return clock;
-		}
-
-		public void setClock(int clock) {
-			this.clock = clock;
-		}
-
-		public ServerRecord(String configStr) {
-			String[] splitAddress = configStr.split(":");
-			try {
-				addr = InetAddress.getByName(splitAddress[0]);
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			}
-			port = Integer.parseInt(splitAddress[1]);
-			clock = 0;
-		}
-	}
 
 	public class ClientRequest {
 		private Socket s;
@@ -84,24 +61,6 @@ public class Server {
 				return -1;
 			}
 			return 1;
-		}
-
-		public void fulfill() {
-
-		}
-	}
-
-	public class ScheduledFailure {
-		private int k;
-		private int delta;
-
-		public ScheduledFailure(int k, int delta) {
-			this.k = k;
-			this.delta = delta;
-		}
-
-		public boolean hasFailed(int numServed) {
-			return numServed >= this.k;
 		}
 	}
 
@@ -143,14 +102,22 @@ public class Server {
 			String[] splitMsg = msg.split(" ");
 			String directive = splitMsg[1];
 			try {
-				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				if (directive == "R") {
+					PrintWriter out = new PrintWriter(socket.getOutputStream());
 					// request -- send back an acknowledgement
 					out.println("OK");
 				} else {
 					// other guy finished--am i at top of q, and have I received
-					// all
-					// acks?
+					// all acks?
+					Server.this.clientRequests.remove();
+					if (Server.this.clientRequests.peek().isValid()
+							&& Server.this.clientRequests.peek().server == Server.this.serverId) {
+						// time to process this request
+						Server.this.processRequest(Server.this.clientRequests
+								.remove().reqString);
+						
+						// TODO - request processed. Send the finished message.
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -185,7 +152,7 @@ public class Server {
 			Socket s = null;
 			try {
 				// talk to the server on the socket
-				s = new Socket(sr.addr, sr.port);
+				s = new Socket(sr.getAddr(), sr.getPort());
 
 				// we'll communicate through streams: scanner and printwriter
 				Scanner in = new Scanner(s.getInputStream());
@@ -197,6 +164,9 @@ public class Server {
 				// wait for acknowledgement -- TODO, timeout here?
 				in.nextLine();
 
+				// add acknowledgement
+				cr.ackReceived();
+
 				// clean up -- not sure if these are redundant. Stream closes if
 				// any is called.
 				s.close();
@@ -205,7 +175,6 @@ public class Server {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -270,11 +239,11 @@ public class Server {
 	 */
 	public void startServer() {
 		try {
-			InetAddress addr = serverRecords.get(serverId).addr;
+			InetAddress addr = serverRecords.get(serverId).getAddr();
 			if (addr.isAnyLocalAddress() || addr.isLoopbackAddress()) {
 				System.out.println("Starting a server on port "
-						+ serverRecords.get(serverId).port);
-				tcpSocket = new ServerSocket(serverRecords.get(serverId).port);
+						+ serverRecords.get(serverId).getPort());
+				tcpSocket = new ServerSocket(serverRecords.get(serverId).getPort());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
