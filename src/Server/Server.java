@@ -19,8 +19,12 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import message.FinishedMessage;
+import message.Message;
+import message.RequestMessage;
 import record.FailureRecord;
 import record.ServerRecord;
+import request.ClientRequest;
 import request.RecoveryRequest;
 import request.Request;
 
@@ -50,6 +54,7 @@ public class Server {
 	// volatile state - lost on crash
 	private Map<String, String> bookMap;
 	private PriorityQueue<Request> requests;
+	private List<ClientRequest> scheduledClientRequests;
 
 	// constants
 	private final String RESERVE = "reserve";
@@ -71,6 +76,7 @@ public class Server {
 		serverRecords = new ArrayList<ServerRecord>();
 		scheduledFailures = new ArrayList<FailureRecord>();
 		requests = new PriorityQueue<Request>();
+		scheduledClientRequests = new ArrayList<ClientRequest>();
 		currentScheduledFailure = null;
 		numServed = 0;
 		clock = 0;
@@ -86,7 +92,7 @@ public class Server {
 	}
 
 	// getters
-	public boolean isRecovered(){
+	public boolean hasRecovered(){
 		if (crashed && numRecoveriesReceived >= numServers - 1){
 			crashed = false;
 			numRecoveriesReceived = 0;
@@ -133,6 +139,34 @@ public class Server {
 	public FailureRecord getCurrentScheduledFailure() {
 		return currentScheduledFailure;
 	}
+	
+	public void scheduleClientRequest(ClientRequest cr){
+		scheduledClientRequests.add(cr);
+	}
+	
+	public void broadcastMessage(Message m){
+		for (ServerRecord s : serverRecords){
+			if (!s.equals(this) && s.isOnline()){
+				m.setTo(s);
+				threadpool.submit(m);
+			} else if (!s.isOnline()){
+				m.ackReceived();
+			}
+		}
+	}
+	
+	public void broadcastScheduledRequests(){
+		for (ClientRequest cr: scheduledClientRequests){
+			// update the request to have a valid clock.
+			cr.setClock(clock++);
+			
+			// add to local queue
+			requests.add(cr);
+	
+			// send request to other servers
+			broadcastMessage(new RequestMessage(this, cr, null));
+		}
+	}
 
 	/**
 	 * fail - clears state and sleeps for requisite period
@@ -147,8 +181,9 @@ public class Server {
 		numServed = 0;
 		numRecoveriesReceived = 0;
 		
-		// clear state - client requests become empty.
+		// clear state - requests become empty.
 		requests.clear();
+		scheduledClientRequests.clear();
 
 		// also, make all books available again
 		for (String bookKey : bookMap.keySet()) {
@@ -326,13 +361,18 @@ public class Server {
 	 * 
 	 */
 	public void serveIfReady() {
-		if (getRequests().peek().isValid()
+		// while loop means we can handle multiple in a row if we're up.
+		while (getRequests().peek().isValid()
 				&& getRequests().peek().isMine()) {
 			// time to process this request
 			Request req = requests.remove();
+			
+			// fulfill the request
 			req.fulfill();
+			
+			// broadcast that we're done.
+			broadcastMessage(new FinishedMessage(this, null));
 		}
-
 	}
 
 	public static void main(String[] args) {

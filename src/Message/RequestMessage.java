@@ -15,6 +15,10 @@ public class RequestMessage extends Message{
 		super(from, to);
 		this.cr = cr;
 	}
+	
+	public void ackReceived(){
+		cr.ackReceived();
+	}
 
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
@@ -25,7 +29,7 @@ public class RequestMessage extends Message{
 		in.nextLine();
 
 		// add acknowledgement
-		cr.ackReceived();
+		ackReceived();
 		
 		// check if it's our turn.
 		this.from.serveIfReady();
@@ -36,6 +40,8 @@ public class RequestMessage extends Message{
 	public void handleTimeout() {
 		// mark this server as offline until we get a RecoveryMessage from them
 		to.setOnline(false);
+		
+		// TODO - remove all CRs that belong to that server.
 		
 		// if that server has crashed, we can count them as acknowledging.
 		cr.ackReceived();

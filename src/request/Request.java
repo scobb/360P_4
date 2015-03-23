@@ -20,7 +20,9 @@ public abstract class Request {
 	public boolean isMine(){
 		return server != null;
 	}
-	
+	public void setClock(int clock){
+		this.clock = clock;
+	}
 	public Server getServer() {
 		return server;
 	}

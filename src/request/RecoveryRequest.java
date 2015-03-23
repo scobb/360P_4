@@ -10,12 +10,16 @@ public class RecoveryRequest extends Request{
 	}
 	@Override
 	public void fulfill() {
-		for (ServerRecord sr : this.server.getServerRecords()){
-			if (!this.server.equals(sr)){
-				this.server.getThreadpool().submit(new RecoveryMessage(this.server, sr));
-			}
+		if (server != null){
+			server.broadcastMessage(new RecoveryMessage(this.server, null));
+			while (!this.server.hasRecovered());
 		}
-		while (!this.server.isRecovered());
+		
+		// everyone else will do nothing, and wait for this guy to finish.
+	}
+	@Override
+	public boolean isMine(){
+		return true;
 	}
 	@Override
 	public boolean isValid() {

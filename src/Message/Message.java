@@ -14,8 +14,16 @@ public abstract class Message implements Runnable {
 	protected Server from;
 	protected ServerRecord to;
 
+	public void ackReceived(){
+		
+	}
+
 	public Message(Server from, ServerRecord to) {
 		this.from = from;
+		this.to = to;
+	}
+	
+	public void setTo(ServerRecord to){
 		this.to = to;
 	}
 
@@ -50,4 +58,5 @@ public abstract class Message implements Runnable {
 			e.printStackTrace();
 		}
 	}
+
 }

@@ -44,7 +44,8 @@ public class TCPHandler implements Runnable {
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split(" ");
 		String directive = splitMsg[1];
-		server.setClock(Integer.parseInt(splitMsg[2]) + 1);
+		int clock = Integer.parseInt(splitMsg[2]);
+		server.setClock(clock + 1);
 		try {
 			if (directive == Server.REQUEST) {
 				// request -- send back an acknowledgement
@@ -53,11 +54,15 @@ public class TCPHandler implements Runnable {
 
 				out.println("OK");
 				
-				server.getRequests().add(new ClientRequest(null, null, sender, server.getClock(), null));
+				server.getRequests().add(new ClientRequest(null, null, sender, clock, null));
 			} else if (directive == Server.RECOVER) {
 				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
-				// schedule recover response
-				server.getRequests().add(new RecoveryRequest(null, sender, server.getClock()));
+				
+				// sender is back online
+				sender.setOnline(true);
+				
+				// schedule recover response - TODO - this clock is invalid, will that break things?
+				server.getRequests().add(new RecoveryRequest(null, sender, clock));
 
 			} else {
 				// remote server finished serving---update database to stay in
@@ -74,15 +79,16 @@ public class TCPHandler implements Runnable {
 	}
 
 	private void handleClientMessage(String msg) {
-		ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
-		server.getRequests().add(cr);
-
-		// send requests to other servers - worth spinning off a thread?
-		for (ServerRecord s : server.getServerRecords()) {
-			if (!s.equals(server) && s.isOnline()) {
-				server.getThreadpool()
-						.submit(new RequestMessage(server, cr, s));
-			}
+		if (server.hasRecovered()){
+			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
+			server.getRequests().add(cr);
+	
+			// send requests to other servers
+			server.broadcastMessage(new RequestMessage(server, cr, null));
+		} else {
+			// clock not valid yet. Should not broadcast.
+			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg));
+			
 		}
 	}
 }
