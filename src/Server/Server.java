@@ -19,10 +19,10 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import record.ClientRecord;
 import record.FailureRecord;
 import record.ServerRecord;
-import message.FinishedMessage;
+import request.RecoveryRequest;
+import request.Request;
 
 /**
  * Server - Implements a distributed TCP server.
@@ -37,6 +37,7 @@ public class Server {
 	private int clock;
 	private int serverId;
 	private int numServed;
+	private int numRecoveriesReceived;
 	private ServerSocket tcpSocket;
 	private ExecutorService threadpool;
 
@@ -48,7 +49,7 @@ public class Server {
 
 	// volatile state - lost on crash
 	private Map<String, String> bookMap;
-	private PriorityQueue<ClientRecord> clientRequests;
+	private PriorityQueue<Request> requests;
 
 	// constants
 	private final String RESERVE = "reserve";
@@ -56,6 +57,11 @@ public class Server {
 	private final String FAIL = "fail ";
 	private final String AVAILABLE = "available";
 	private final String FREE = "free ";
+	public static final String SERVER = "SERVER";
+	public static final String CLIENT = "CLIENT";
+	public static final String REQUEST = "R";
+	public static final String FINISHED = "F";
+	public static final String RECOVER = "V";
 	public static final int TIMEOUT_MS = 100;
 
 	// empty constructor - instantiate the map that will track who has what
@@ -64,14 +70,29 @@ public class Server {
 		bookMap = new HashMap<String, String>();
 		serverRecords = new ArrayList<ServerRecord>();
 		scheduledFailures = new ArrayList<FailureRecord>();
-		clientRequests = new PriorityQueue<ClientRecord>();
+		requests = new PriorityQueue<Request>();
 		currentScheduledFailure = null;
 		numServed = 0;
 		clock = 0;
 		crashed = false;
+		numRecoveriesReceived = 0;
+	}
+	// incrementors
+	public void recoveryReceived(){
+		++numRecoveriesReceived;
+	}
+	public void clientServed() {
+		++numServed;
 	}
 
 	// getters
+	public boolean isRecovered(){
+		if (crashed && numRecoveriesReceived >= numServers - 1){
+			crashed = false;
+			numRecoveriesReceived = 0;
+		}
+		return !crashed;
+	}
 	public int getNumServed() {
 		return numServed;
 	}
@@ -83,9 +104,13 @@ public class Server {
 	public int getClock() {
 		return clock;
 	}
+	
+	public void setClock(int clock){
+		this.clock = Math.max(this.clock, clock + 1);
+	}
 
-	public PriorityQueue<ClientRecord> getClientRequests() {
-		return clientRequests;
+	public PriorityQueue<Request> getRequests() {
+		return requests;
 	}
 
 	public List<ServerRecord> getServerRecords() {
@@ -104,9 +129,6 @@ public class Server {
 		return tcpSocket;
 	}
 
-	public void clientServed() {
-		++numServed;
-	}
 
 	public FailureRecord getCurrentScheduledFailure() {
 		return currentScheduledFailure;
@@ -121,8 +143,12 @@ public class Server {
 		// update state
 		crashed = true;
 
+		// reset state
+		numServed = 0;
+		numRecoveriesReceived = 0;
+		
 		// clear state - client requests become empty.
-		clientRequests.clear();
+		requests.clear();
 
 		// also, make all books available again
 		for (String bookKey : bookMap.keySet()) {
@@ -138,13 +164,9 @@ public class Server {
 
 		// update failure list
 		updateCurrentScheduledFailure();
-		// TODO - send message to other servers to send me a list of client
-		// records, books
-		// should receive ALL of these before resuming service (excluding
-		// timeouts from crashed)
-
-		// no longer crashed.
-		crashed = false;
+		
+		// schedule a recoveryRecord
+		requests.add(new RecoveryRequest(this, null, this.clock));
 	}
 
 	public void updateCurrentScheduledFailure() {
@@ -214,8 +236,8 @@ public class Server {
 	 * @param s
 	 *            - configuration string for a server
 	 */
-	public void addServerRecord(String s) {
-		serverRecords.add(new ServerRecord(s));
+	public void addServerRecord(String s, int id) {
+		serverRecords.add(new ServerRecord(s, id));
 	}
 
 	/**
@@ -230,6 +252,7 @@ public class Server {
 				// when we get a connection, spin off a thread to handle it if
 				// we're online
 				if (!crashed) {
+					++clock;
 					threadpool.submit(new TCPHandler(s, this));
 				}
 			}
@@ -294,7 +317,7 @@ public class Server {
 	 */
 	public void updateFromRemoteComplete() {
 		// remove next from queue and process, but don't output
-		processRequest(getClientRequests().remove().getReqString());
+		requests.remove().fulfillSilently();
 	}
 
 	/**
@@ -303,40 +326,11 @@ public class Server {
 	 * 
 	 */
 	public void serveIfReady() {
-		if (getClientRequests().peek().isValid()
-				&& getClientRequests().peek().getServer() == this) {
+		if (getRequests().peek().isValid()
+				&& getRequests().peek().isMine()) {
 			// time to process this request
-			ClientRecord req = getClientRequests().remove();
-			String result = processRequest(req.getReqString());
-
-			// send response to appropriate client
-			PrintWriter out;
-			try {
-				out = new PrintWriter(req.getSocket().getOutputStream());
-				out.println(result);
-				out.flush();
-				out.close();
-				req.getSocket().close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			// request processed. Send the finished message.
-			for (ServerRecord sr : getServerRecords()) {
-				if (!sr.equals(this)) {
-					// send finished msg to each server that isn't me
-					getThreadpool().submit(new FinishedMessage(this, sr));
-				}
-			}
-
-			// update number of clients served
-			clientServed();
-
-			// is it time to fail?
-			if (getCurrentScheduledFailure() != null
-					&& getCurrentScheduledFailure().hasFailed(getNumServed())) {
-				fail();
-			}
+			Request req = requests.remove();
+			req.fulfill();
 		}
 
 	}
@@ -353,7 +347,7 @@ public class Server {
 
 		// add records of all servers
 		for (int i = 0; i < s.numServers; ++i) {
-			s.addServerRecord(sc.nextLine());
+			s.addServerRecord(sc.nextLine(), i);
 		}
 
 		// get records of scheduled crash

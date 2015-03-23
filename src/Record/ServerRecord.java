@@ -9,10 +9,24 @@ public class ServerRecord {
 	private InetAddress addr;
 	private int port;
 	private int clock;
-
+	private int id;
+	private boolean online;
+	
 	// getters
 	public int getClock() {
 		return clock;
+	}
+	
+	public int getId(){
+		return id;
+	}
+
+	public void setOnline(boolean online){
+		this.online = online;
+	}
+	
+	public boolean isOnline(){
+		return online;
 	}
 
 	public InetAddress getAddr() {
@@ -24,7 +38,7 @@ public class ServerRecord {
 	}
 
 	// constructor
-	public ServerRecord(String configStr) {
+	public ServerRecord(String configStr, int id) {
 		String[] splitAddress = configStr.split(":");
 		try {
 			addr = InetAddress.getByName(splitAddress[0]);
@@ -33,6 +47,8 @@ public class ServerRecord {
 		}
 		port = Integer.parseInt(splitAddress[1]);
 		clock = 0;
+		online = true;
+		this.id = id;
 	}
 
 	public boolean equals(Server other) {
