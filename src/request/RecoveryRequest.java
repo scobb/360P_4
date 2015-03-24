@@ -23,11 +23,14 @@ public class RecoveryRequest extends Request{
 		return true;
 	}
 	@Override
-	public boolean isValid() {
-		return true;
-	}
-	@Override
 	public void fulfillSilently() {
 		fulfill();
+	}
+	@Override
+	public boolean isValid(){
+		if (server != null){
+			return true;
+		}
+		return super.isValid();
 	}
 }
