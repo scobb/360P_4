@@ -106,6 +106,7 @@ public class Client {
 	 *            Port server will be listening on
 	 */
 	public void processTcp(String send, int port) throws IOException {
+		System.out.println("In processTcp");
 		Socket s = null;
 		// talk to the server on the socket
 		s = new Socket();
@@ -115,11 +116,14 @@ public class Client {
 		Scanner in = new Scanner(s.getInputStream());
 		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
+		System.out.println("Sending request.");
 		// send request
 		out.println(send);
 
+		System.out.println("Printing Response.");
 		// print response to stdout
 		System.out.println(in.nextLine());
+		System.out.println("Printed.");
 
 		// clean up -- not sure if these are redundant. Stream closes if any
 		// is called.

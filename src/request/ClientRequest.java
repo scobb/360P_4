@@ -30,6 +30,7 @@ public class ClientRequest extends Request{
 		PrintWriter out;
 		try {
 			out = new PrintWriter(s.getOutputStream());
+			System.out.println("Writing to client: " + result );
 			out.println(result);
 			out.flush();
 			out.close();

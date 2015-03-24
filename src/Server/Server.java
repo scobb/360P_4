@@ -373,10 +373,12 @@ public class Server {
 	 * 
 	 */
 	public void serveIfReady() {
+		System.out.println("Serving if ready...");
 		// while loop means we can handle multiple in a row if we're up.
 		while (getRequests().peek().isValid() && getRequests().peek().isMine()) {
 			// time to process this request
 			Request req = requests.remove();
+			System.out.println("Got a valid request. Fulfilling.");
 
 			// fulfill the request
 			req.fulfill();

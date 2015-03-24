@@ -22,11 +22,15 @@ public class RequestMessage extends Message{
 
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
+		System.out.println("Communicating...");
+		System.out.println("Message: SERVER R " + from.getClock() + " " + from.getServerId());
 		// construct message
-		out.println("SERVER R " + from.getClock());
+		out.println("SERVER R " + from.getClock() + " " + from.getServerId());
 
 		// wait for acknowledgement -- TODO, timeout here?
 		in.nextLine();
+		
+		System.out.println("Got the acknowledgement");
 
 		// add acknowledgement
 		ackReceived();

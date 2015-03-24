@@ -18,6 +18,7 @@ public abstract class Request {
 		acksReceived = 0;
 	}
 	public boolean isMine(){
+		System.out.println("isMine(): " + (server != null));
 		return server != null;
 	}
 	public void setClock(int clock){
@@ -50,6 +51,7 @@ public abstract class Request {
 	}
 
 	public boolean isValid() {
+		System.out.println("isValid(): " + (acksReceived >= this.server.getNumServers() - 1));
 		return acksReceived >= this.server.getNumServers() - 1;
 	}
 }

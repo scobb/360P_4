@@ -45,19 +45,25 @@ public class TCPHandler implements Runnable {
 		System.out.println("Handling a server message: " + msg);
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split(" ");
-		String directive = splitMsg[1];
+		String directive = splitMsg[1].trim();
+		System.out.println("Directive: " + directive);
+		System.out.println("Server.REQUEST: " + Server.REQUEST);
 		int clock = Integer.parseInt(splitMsg[2]);
 		server.setClock(clock + 1);
 		try {
-			if (directive == Server.REQUEST) {
+			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
+				System.out.println("It was a request.");
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
-
+				System.out.println("Got output stream.");
+				System.out.println("Sending OK response");
 				out.println("OK");
-				
+				out.flush();
+
+				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
 				server.getRequests().add(new ClientRequest(null, null, sender, clock, null));
-			} else if (directive == Server.RECOVER) {
+			} else if (directive.equals(Server.RECOVER)) {
+				System.out.println("It was a recover.");
 				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
 				
 				// sender is back online
@@ -67,6 +73,7 @@ public class TCPHandler implements Runnable {
 				server.getRequests().add(new RecoveryRequest(null, sender, clock));
 
 			} else {
+				System.out.println("it was somethingg else.");
 				// remote server finished serving---update database to stay in
 				// line
 				server.updateFromRemoteComplete();
