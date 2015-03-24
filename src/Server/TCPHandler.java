@@ -28,7 +28,8 @@ public class TCPHandler implements Runnable {
 			Scanner in = new Scanner(socket.getInputStream());
 			String msg = in.nextLine();
 			// determine if this message came from client or server
-			if (msg.split(" ")[0] == "SERVER") {
+			System.out.println(msg.split("\\s+")[0]);
+			if (msg.split("\\s+")[0].trim().equals("SERVER")) {
 				this.handleServerMessage(msg);
 			} else {
 				this.handleClientMessage(msg);
@@ -41,6 +42,7 @@ public class TCPHandler implements Runnable {
 	}
 
 	private void handleServerMessage(String msg) {
+		System.out.println("Handling a server message: " + msg);
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split(" ");
 		String directive = splitMsg[1];
@@ -79,13 +81,16 @@ public class TCPHandler implements Runnable {
 	}
 
 	private void handleClientMessage(String msg) {
+		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()){
+			System.out.println("Server is healthy!");
 			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
 			server.getRequests().add(cr);
 	
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
 		} else {
+			System.out.println("Server is broken :(");
 			// clock not valid yet. Should not broadcast.
 			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg));
 			

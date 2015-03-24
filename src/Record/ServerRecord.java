@@ -41,7 +41,8 @@ public class ServerRecord {
 	public ServerRecord(String configStr, int id) {
 		String[] splitAddress = configStr.split(":");
 		try {
-			addr = InetAddress.getByName(splitAddress[0]);
+			addr = InetAddress.getByName(splitAddress[0].trim());
+			System.out.println("in the constructor: " + addr);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -52,8 +53,7 @@ public class ServerRecord {
 	}
 
 	public boolean equals(Server other) {
-		return this.addr == other.getTcpSocket().getInetAddress()
-				&& this.port == other.getTcpSocket().getLocalPort();
+		return this.addr.equals(other.getAddr()) && this.port == other.getPort();
 	}
 
 }

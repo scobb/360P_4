@@ -38,7 +38,9 @@ public class Server {
 	private int numRecoveriesReceived;
 	private ServerSocket tcpSocket;
 	private ExecutorService threadpool;
-
+	private InetAddress addr;
+	private int port;
+	
 	// permanent state - not lost on crash
 	private boolean crashed;
 	private List<ServerRecord> serverRecords;
@@ -95,6 +97,14 @@ public class Server {
 		}
 		return !crashed;
 	}
+	
+	public int getPort(){
+		return port;
+	}
+	
+	public InetAddress getAddr(){
+		return addr;
+	}
 
 	public int getNumServed() {
 		return numServed;
@@ -141,8 +151,10 @@ public class Server {
 	}
 
 	public void broadcastMessage(Message m) {
+		System.out.println("Broadcasting...");
 		for (ServerRecord s : serverRecords) {
 			if (!s.equals(this) && s.isOnline()) {
+				System.out.println("Broadcasting to " + s);
 				m.setTo(s);
 				threadpool.submit(m);
 			} else if (!s.isOnline()) {
@@ -170,6 +182,7 @@ public class Server {
 	 * 
 	 */
 	public synchronized void fail() {
+		System.out.println("FAILING.");
 		// update state
 		crashed = true;
 
@@ -242,6 +255,8 @@ public class Server {
 						+ serverRecords.get(serverId - 1).getPort());
 				tcpSocket = new ServerSocket(serverRecords.get(serverId - 1)
 						.getPort());
+				this.addr = addr;
+				this.port = serverRecords.get(serverId - 1).getPort();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -301,6 +316,7 @@ public class Server {
 	 * @return String that holds response to client
 	 */
 	public synchronized String processRequest(String request) {
+		System.out.println("Processing request: " + request);
 		// parse request into component parts
 		String[] requestSplit = request.split("\\s+");
 		String client = requestSplit[0].trim();
