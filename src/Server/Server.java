@@ -240,11 +240,11 @@ public class Server {
 	 */
 	public void startServer() {
 		try {
-			InetAddress addr = serverRecords.get(serverId).getAddr();
+			InetAddress addr = serverRecords.get(serverId - 1).getAddr();
 			if (addr.isAnyLocalAddress() || addr.isLoopbackAddress()) {
 				System.out.println("Starting a server on port "
-						+ serverRecords.get(serverId).getPort());
-				tcpSocket = new ServerSocket(serverRecords.get(serverId)
+						+ serverRecords.get(serverId - 1).getPort());
+				tcpSocket = new ServerSocket(serverRecords.get(serverId - 1)
 						.getPort());
 			}
 		} catch (IOException e) {
@@ -260,8 +260,8 @@ public class Server {
 	 */
 	public void addScheduledFailure(String s) {
 		String[] split = s.split("\\s+");
-		int k = Integer.parseInt(split[0]);
-		int delta = Integer.parseInt(split[1]);
+		int k = Integer.parseInt(split[1]);
+		int delta = Integer.parseInt(split[2]);
 		scheduledFailures.add(new FailureRecord(k, delta));
 	}
 
