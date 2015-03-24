@@ -60,6 +60,7 @@ public class Server {
 	private final String FREE = "free ";
 	public static final String SERVER = "SERVER";
 	public static final String CLIENT = "CLIENT";
+	public static final String CRASH = "CRASH";
 	public static final String REQUEST = "R";
 	public static final String FINISHED = "F";
 	public static final String RECOVER = "V";
@@ -288,6 +289,20 @@ public class Server {
 	public void addServerRecord(String s, int id) {
 		serverRecords.add(new ServerRecord(s, id));
 	}
+	public void route(Socket s) throws IOException {
+		Scanner in = new Scanner(s.getInputStream());
+		String switchVal = in.nextLine();
+		if (switchVal.equals(SERVER)){
+			++clock;
+			(new TCPHandler(s, this)).handleServerMessage(in.nextLine());
+		} else if (switchVal.equals(CLIENT)){
+			++clock;
+			(new TCPHandler(s, this)).handleClientMessage(in.nextLine());
+		} else {
+			// time to crash
+			fail();
+		}
+	}
 
 	/**
 	 * listen - blocking method that listens for TCP input
@@ -300,10 +315,11 @@ public class Server {
 			while ((s = tcpSocket.accept()) != null) {
 				// when we get a connection, spin off a thread to handle it if
 				// we're online
-				if (!crashed) {
-					++clock;
-					threadpool.submit(new TCPHandler(s, this));
-				}
+				route(s);
+//				if (!crashed) {
+//					++clock;
+//					threadpool.submit(new TCPHandler(s, this));
+//				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -368,7 +384,7 @@ public class Server {
 	public void updateFromRemoteComplete() {
 		// remove next from queue and process, but don't output
 		System.out.println("Updating from complete. Fulfilling silently.");
-		requests.remove().fulfillSilently();
+		requests.remove().fulfillSilently(this);
 	}
 
 	/**
@@ -379,7 +395,7 @@ public class Server {
 	public void serveIfReady() {
 		System.out.println("Serving if ready: " + getRequests().peek());
 		// while loop means we can handle multiple in a row if we're up.
-		while (getRequests().peek().isValid() && getRequests().peek().isMine()) {
+		while (getRequests().peek() != null && getRequests().peek().isValid() && getRequests().peek().isMine()) {
 			// time to process this request
 			Request req = requests.remove();
 			System.out.println("Got a valid request. Fulfilling.");

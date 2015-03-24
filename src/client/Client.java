@@ -117,6 +117,7 @@ public class Client {
 		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
 		System.out.println("Sending request.");
+		out.println("CLIENT");
 		// send request
 		out.println(send);
 

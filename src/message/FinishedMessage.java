@@ -13,6 +13,7 @@ public class FinishedMessage extends Message {
 
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
+		out.println("SERVER");
 		out.println("SERVER F " + from.getClock() + " " + from.getServerId());
 	}
 

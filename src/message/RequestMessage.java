@@ -23,9 +23,10 @@ public class RequestMessage extends Message{
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
 		System.out.println("Communicating...");
-		System.out.println("Message: SERVER R " + from.getClock() + " " + from.getServerId());
+		System.out.println("Message: SERVER R " + from.getClock() + " " + from.getServerId() + " :" + cr.getMsg());
 		// construct message
-		out.println("SERVER R " + from.getClock() + " " + from.getServerId());
+		out.println("SERVER");
+		out.println("SERVER R " + from.getClock() + " " + from.getServerId() + " :" + cr.getMsg());
 
 		// wait for acknowledgement -- TODO, timeout here?
 		in.nextLine();

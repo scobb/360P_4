@@ -36,8 +36,11 @@ public abstract class Request {
 		}
 		return sr.getId();
 	}
+	public String getMsg(){
+		return "";
+	}
 	public abstract void fulfill();
-	public abstract void fulfillSilently();
+	public abstract void fulfillSilently(Server server);
 	public int compareTo(Request other) {
 		if (this.clock < other.clock
 				|| (this.clock == other.clock && this.server.getServerId() < other.server.getServerId())) {

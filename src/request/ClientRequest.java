@@ -53,9 +53,12 @@ public class ClientRequest extends Request{
 		}
 		
 	}
+	public String getMsg(){
+		return reqString;
+	}
 
 	@Override
-	public void fulfillSilently() {
+	public void fulfillSilently(Server server) {
 		server.processRequest(reqString);
 	}
 }

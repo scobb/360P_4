@@ -16,6 +16,7 @@ public class RecoveryMessage extends Message{
 	@Override
 	public void communicate(Scanner in, PrintWriter out) {
 		// send recover request
+		out.println(Server.SERVER);
 		out.println(Server.SERVER + " " + Server.RECOVER);
 		out.flush();
 		

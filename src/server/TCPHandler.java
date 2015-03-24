@@ -43,7 +43,7 @@ public class TCPHandler implements Runnable {
 		}
 	}
 
-	private void handleServerMessage(String msg) {
+	public void handleServerMessage(String msg) {
 		System.out.println("Handling a server message: " + msg);
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split("\\s+");
@@ -55,12 +55,13 @@ public class TCPHandler implements Runnable {
 			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
+
+				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
+				server.getRequests().add(new ClientRequest(null, null, sender, clock, msg.split(":")[1]));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
 
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
-				server.getRequests().add(new ClientRequest(null, null, sender, clock, null));
 			} else if (directive.equals(Server.RECOVER)) {
 				System.out.println("It was a recover.");
 				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
@@ -89,7 +90,7 @@ public class TCPHandler implements Runnable {
 
 	}
 
-	private void handleClientMessage(String msg) {
+	public void handleClientMessage(String msg) {
 		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()){
 			System.out.println("Server is healthy!");
