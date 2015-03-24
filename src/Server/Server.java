@@ -13,7 +13,6 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import message.FinishedMessage;
 import message.Message;
 import message.RequestMessage;
 import record.FailureRecord;
@@ -364,6 +363,7 @@ public class Server {
 	 */
 	public void updateFromRemoteComplete() {
 		// remove next from queue and process, but don't output
+		System.out.println("Updating from complete. Fulfilling silently.");
 		requests.remove().fulfillSilently();
 	}
 
@@ -373,7 +373,7 @@ public class Server {
 	 * 
 	 */
 	public void serveIfReady() {
-		System.out.println("Serving if ready...");
+		System.out.println("Serving if ready: " + getRequests().peek());
 		// while loop means we can handle multiple in a row if we're up.
 		while (getRequests().peek().isValid() && getRequests().peek().isMine()) {
 			// time to process this request
@@ -382,9 +382,6 @@ public class Server {
 
 			// fulfill the request
 			req.fulfill();
-
-			// broadcast that we're done.
-			broadcastMessage(new FinishedMessage(this, null));
 		}
 	}
 

@@ -42,7 +42,6 @@ public class ServerRecord {
 		String[] splitAddress = configStr.split(":");
 		try {
 			addr = InetAddress.getByName(splitAddress[0].trim());
-			System.out.println("in the constructor: " + addr);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}

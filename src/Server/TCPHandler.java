@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 
 import record.ServerRecord;
@@ -31,11 +32,12 @@ public class TCPHandler implements Runnable {
 			System.out.println(msg.split("\\s+")[0]);
 			if (msg.split("\\s+")[0].trim().equals("SERVER")) {
 				this.handleServerMessage(msg);
+				socket.close();
 			} else {
 				this.handleClientMessage(msg);
 			}
-			String resp = server.processRequest(msg);
-			socket.close();
+			// String resp = server.processRequest(msg);
+			// socket.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -47,7 +49,6 @@ public class TCPHandler implements Runnable {
 		String[] splitMsg = msg.split(" ");
 		String directive = splitMsg[1].trim();
 		System.out.println("Directive: " + directive);
-		System.out.println("Server.REQUEST: " + Server.REQUEST);
 		int clock = Integer.parseInt(splitMsg[2]);
 		server.setClock(clock + 1);
 		try {
@@ -55,8 +56,6 @@ public class TCPHandler implements Runnable {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
-				System.out.println("Got output stream.");
-				System.out.println("Sending OK response");
 				out.println("OK");
 				out.flush();
 
@@ -73,7 +72,7 @@ public class TCPHandler implements Runnable {
 				server.getRequests().add(new RecoveryRequest(null, sender, clock));
 
 			} else {
-				System.out.println("it was somethingg else.");
+				System.out.println("It was something else.");
 				// remote server finished serving---update database to stay in
 				// line
 				server.updateFromRemoteComplete();
@@ -91,6 +90,11 @@ public class TCPHandler implements Runnable {
 		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()){
 			System.out.println("Server is healthy!");
+			try {
+			socket.setKeepAlive(true);
+			} catch (SocketException exc) {
+				exc.printStackTrace();
+			}
 			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
 			server.getRequests().add(cr);
 	
