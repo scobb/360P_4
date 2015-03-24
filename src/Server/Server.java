@@ -1,17 +1,11 @@
 package server;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -83,22 +77,25 @@ public class Server {
 		crashed = false;
 		numRecoveriesReceived = 0;
 	}
+
 	// incrementors
-	public void recoveryReceived(){
+	public void recoveryReceived() {
 		++numRecoveriesReceived;
 	}
+
 	public void clientServed() {
 		++numServed;
 	}
 
 	// getters
-	public boolean hasRecovered(){
-		if (crashed && numRecoveriesReceived >= numServers - 1){
+	public boolean hasRecovered() {
+		if (crashed && numRecoveriesReceived >= numServers - 1) {
 			crashed = false;
 			numRecoveriesReceived = 0;
 		}
 		return !crashed;
 	}
+
 	public int getNumServed() {
 		return numServed;
 	}
@@ -110,8 +107,8 @@ public class Server {
 	public int getClock() {
 		return clock;
 	}
-	
-	public void setClock(int clock){
+
+	public void setClock(int clock) {
 		this.clock = Math.max(this.clock, clock + 1);
 	}
 
@@ -135,34 +132,33 @@ public class Server {
 		return tcpSocket;
 	}
 
-
 	public FailureRecord getCurrentScheduledFailure() {
 		return currentScheduledFailure;
 	}
-	
-	public void scheduleClientRequest(ClientRequest cr){
+
+	public void scheduleClientRequest(ClientRequest cr) {
 		scheduledClientRequests.add(cr);
 	}
-	
-	public void broadcastMessage(Message m){
-		for (ServerRecord s : serverRecords){
-			if (!s.equals(this) && s.isOnline()){
+
+	public void broadcastMessage(Message m) {
+		for (ServerRecord s : serverRecords) {
+			if (!s.equals(this) && s.isOnline()) {
 				m.setTo(s);
 				threadpool.submit(m);
-			} else if (!s.isOnline()){
+			} else if (!s.isOnline()) {
 				m.ackReceived();
 			}
 		}
 	}
-	
-	public void broadcastScheduledRequests(){
-		for (ClientRequest cr: scheduledClientRequests){
+
+	public void broadcastScheduledRequests() {
+		for (ClientRequest cr : scheduledClientRequests) {
 			// update the request to have a valid clock.
 			cr.setClock(clock++);
-			
+
 			// add to local queue
 			requests.add(cr);
-	
+
 			// send request to other servers
 			broadcastMessage(new RequestMessage(this, cr, null));
 		}
@@ -180,7 +176,7 @@ public class Server {
 		// reset state
 		numServed = 0;
 		numRecoveriesReceived = 0;
-		
+
 		// clear state - requests become empty.
 		requests.clear();
 		scheduledClientRequests.clear();
@@ -199,7 +195,7 @@ public class Server {
 
 		// update failure list
 		updateCurrentScheduledFailure();
-		
+
 		// schedule a recoveryRecord
 		requests.add(new RecoveryRequest(this, null, this.clock));
 	}
@@ -362,14 +358,13 @@ public class Server {
 	 */
 	public void serveIfReady() {
 		// while loop means we can handle multiple in a row if we're up.
-		while (getRequests().peek().isValid()
-				&& getRequests().peek().isMine()) {
+		while (getRequests().peek().isValid() && getRequests().peek().isMine()) {
 			// time to process this request
 			Request req = requests.remove();
-			
+
 			// fulfill the request
 			req.fulfill();
-			
+
 			// broadcast that we're done.
 			broadcastMessage(new FinishedMessage(this, null));
 		}

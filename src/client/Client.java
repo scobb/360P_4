@@ -7,9 +7,12 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import record.ServerRecord;
 import server.Server;
 
 public class Client {
@@ -19,11 +22,14 @@ public class Client {
 	// members
 	private String id;
 	private InetAddress add;
+	private List<ServerRecord> servers;
+	private int numServers;
 
 	// no-arg constructor
 	public Client() {
 		this.id = null;
 		this.add = null;
+		this.servers = new ArrayList<ServerRecord>();
 	}
 
 	/**
@@ -37,14 +43,9 @@ public class Client {
 		String[] confSplit = conf.split("\\s+");
 
 		// add c to the client number to be able to easily construct requests
-		this.id = "c" + confSplit[0];
+		this.id = confSplit[0];
+		this.numServers = Integer.parseInt(confSplit[1].trim());
 
-		// build address using ip submitted
-		try {
-			this.add = InetAddress.getByName(confSplit[1]);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -71,11 +72,24 @@ public class Client {
 			// any other command will have the same basic format
 			String book = cmdSplit[0];
 			String directive = cmdSplit[1];
-			int port = Integer.parseInt(cmdSplit[2]);
 
 			String request = id + " " + book + " " + directive;
-			// process request
-			processTcp(request, port);
+
+			for (ServerRecord sr : servers) {
+				// process request
+				try {
+					// try to process
+					processTcp(request, sr.getPort());
+					
+					// if we get here, we can break the loop
+					break;
+				} catch (SocketTimeoutException e) {
+					// try the next server
+					continue;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 	}
@@ -88,33 +102,27 @@ public class Client {
 	 * @param port
 	 *            Port server will be listening on
 	 */
-	public void processTcp(String send, int port) {
+	public void processTcp(String send, int port) throws IOException {
 		Socket s = null;
-		try {
-			// talk to the server on the socket
-			s = new Socket();
-			s.connect(new InetSocketAddress(this.add, port), Server.TIMEOUT_MS);
+		// talk to the server on the socket
+		s = new Socket();
+		s.connect(new InetSocketAddress(this.add, port), Server.TIMEOUT_MS);
 
-			// we'll communicate through streams: scanner and printwriter
-			Scanner in = new Scanner(s.getInputStream());
-			PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+		// we'll communicate through streams: scanner and printwriter
+		Scanner in = new Scanner(s.getInputStream());
+		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
-			// send request
-			out.println(send);
+		// send request
+		out.println(send);
 
-			// print response to stdout
-			System.out.println(in.nextLine());
+		// print response to stdout
+		System.out.println(in.nextLine());
 
-			// clean up -- not sure if these are redundant. Stream closes if any
-			// is called.
-			s.close();
-			in.close();
-			out.close();
-		} catch (SocketTimeoutException e) {
-			handleTimeout();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// clean up -- not sure if these are redundant. Stream closes if any
+		// is called.
+		s.close();
+		in.close();
+		out.close();
 	}
 
 	public void handleTimeout() {
@@ -130,8 +138,11 @@ public class Client {
 
 		// configure using the first line of input
 		c.parseConfig(sc.nextLine());
-		
-		// TODO - add server records
+
+		// add server records
+		for (int i = 0; i < c.numServers; ++i) {
+			c.servers.add(new ServerRecord(sc.nextLine(), i));
+		}
 
 		// go until user enters an empty line.
 		while (true) {
