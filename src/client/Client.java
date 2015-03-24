@@ -111,7 +111,6 @@ public class Client {
 		// talk to the server on the socket
 		s = new Socket();
 		s.connect(new InetSocketAddress(this.add, port), Server.TIMEOUT_MS);
-		s.setKeepAlive(true);
 		
 		// we'll communicate through streams: scanner and printwriter
 		Scanner in = new Scanner(s.getInputStream());

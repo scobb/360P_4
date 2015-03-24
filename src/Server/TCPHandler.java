@@ -69,7 +69,10 @@ public class TCPHandler implements Runnable {
 				sender.setOnline(true);
 				
 				// schedule recover response - TODO - this clock is invalid, will that break things?
-				server.getRequests().add(new RecoveryRequest(null, sender, clock));
+				RecoveryRequest rr = new RecoveryRequest(null, sender, clock);
+				server.getRequests().add(rr);
+				
+				server.broadcastMessage(new RequestMessage(server, rr, null));
 
 			} else {
 				System.out.println("It was something else.");
@@ -90,11 +93,6 @@ public class TCPHandler implements Runnable {
 		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()){
 			System.out.println("Server is healthy!");
-			try {
-			socket.setKeepAlive(true);
-			} catch (SocketException exc) {
-				exc.printStackTrace();
-			}
 			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
 			server.getRequests().add(cr);
 	
