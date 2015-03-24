@@ -13,6 +13,7 @@ public class RecoveryRequest extends Request{
 		if (server != null){
 			server.broadcastMessage(new RecoveryMessage(this.server, null));
 			while (!this.server.hasRecovered());
+			System.out.println("Recovered.");
 		}
 		
 		// everyone else will do nothing, and wait for this guy to finish.

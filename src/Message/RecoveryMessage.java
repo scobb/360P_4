@@ -6,7 +6,7 @@ import java.util.Scanner;
 import record.ServerRecord;
 import server.Server;
 
-// FROM healthy server TO recently-recovered server
+// FROM recently-recovered server TO healthy server
 public class RecoveryMessage extends Message{
 
 	public RecoveryMessage(Server from, ServerRecord to) {
@@ -17,9 +17,7 @@ public class RecoveryMessage extends Message{
 	public void communicate(Scanner in, PrintWriter out) {
 		// send recover request
 		out.println(Server.SERVER + " " + Server.RECOVER);
-		// TODO accept info on books
-		
-		// TODO accept info on clients 
+		out.flush();
 		
 	}
 

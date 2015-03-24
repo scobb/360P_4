@@ -40,12 +40,14 @@ public class ClientRequest extends Request{
 		}
 
 		// request processed. Send the finished message.
-		for (ServerRecord sr : server.getServerRecords()) {
-			if (!sr.equals(this)) {
-				// send finished msg to each server that isn't me
-				server.getThreadpool().submit(new FinishedMessage(server, sr));
-			}
-		}
+		server.broadcastMessage(new FinishedMessage(server, null));
+//		for (ServerRecord sr : server.getServerRecords()) {
+//			if (!sr.equals(this)) {
+//				System.out.println("Sending a finished msg");
+//				// send finished msg to each server that isn't me
+//				server.getThreadpool().submit(new FinishedMessage(server, sr));
+//			}
+//		}
 
 		// update number of clients served
 		server.clientServed();

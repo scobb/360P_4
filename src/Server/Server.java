@@ -48,6 +48,7 @@ public class Server {
 
 	// volatile state - lost on crash
 	private Map<String, String> bookMap;
+
 	private PriorityQueue<Request> requests;
 	private List<ClientRequest> scheduledClientRequests;
 
@@ -95,6 +96,9 @@ public class Server {
 			numRecoveriesReceived = 0;
 		}
 		return !crashed;
+	}
+	public Map<String, String> getBookMap() {
+		return bookMap;
 	}
 	
 	public int getPort(){
@@ -153,7 +157,7 @@ public class Server {
 		System.out.println("Broadcasting...");
 		for (ServerRecord s : serverRecords) {
 			if (!s.equals(this) && s.isOnline()) {
-				System.out.println("Broadcasting to " + s);
+				System.out.println("Broadcasting to " + s.getAddr() + ":" + s.getPort());
 				m.setTo(s);
 				threadpool.submit(m);
 			} else if (!s.isOnline()) {

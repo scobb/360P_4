@@ -46,7 +46,7 @@ public class TCPHandler implements Runnable {
 	private void handleServerMessage(String msg) {
 		System.out.println("Handling a server message: " + msg);
 		// if from server, is it an ack, req, or finished?
-		String[] splitMsg = msg.split(" ");
+		String[] splitMsg = msg.split("\\s+");
 		String directive = splitMsg[1].trim();
 		System.out.println("Directive: " + directive);
 		int clock = Integer.parseInt(splitMsg[2]);
