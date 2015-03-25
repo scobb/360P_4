@@ -66,6 +66,7 @@ public class Server {
 	public static final String REQUEST = "R";
 	public static final String FINISHED = "F";
 	public static final String RECOVER = "V";
+	public static final String SYNCHRONIZE = "S";
 	public static final int TIMEOUT_MS = 100;
 
 	// empty constructor - instantiate the map that will track who has what

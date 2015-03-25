@@ -85,11 +85,12 @@ public class Client {
 				try {
 					// try to process
 					processTcp(request, sr.getPort());
-					
+
 					// if we get here, we can break the loop
 					break;
 				} catch (IOException e) {
-					System.out.println("Server connection failed... proceeding to next.");
+					System.out
+							.println("Server connection failed... proceeding to next.");
 					// try the next server
 					continue;
 				} catch (Exception e) {
@@ -114,13 +115,14 @@ public class Client {
 		// talk to the server on the socket
 		s = new Socket();
 		s.connect(new InetSocketAddress(this.add, port), Server.TIMEOUT_MS);
-		
+
 		// we'll communicate through streams: scanner and printwriter
-		BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				s.getInputStream()));
 		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
 		System.out.println("Sending request.");
-		
+
 		// routing msg
 		out.println("CLIENT");
 
@@ -130,7 +132,7 @@ public class Client {
 		s.setSoTimeout(Server.TIMEOUT_MS);
 		// print response to stdout
 		String next = in.readLine();
-		while (next.trim().equals("WAIT")){
+		while (next.trim().equals("WAIT")) {
 			// adding a bit of buffer for possible server timeouts.
 			System.out.println("Waiting...");
 			try {
@@ -164,7 +166,7 @@ public class Client {
 		for (int i = 0; i < c.numServers; ++i) {
 			c.servers.add(new ServerRecord(sc.nextLine(), i));
 		}
-		
+
 		System.out.println("Client initialized.");
 
 		// go until user enters an empty line.

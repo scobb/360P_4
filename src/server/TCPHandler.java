@@ -11,6 +11,7 @@ import java.util.Scanner;
 import record.ServerRecord;
 import request.ClientRequest;
 import request.RecoveryRequest;
+import request.SynchronizeRequest;
 import message.FinishedMessage;
 import message.RequestMessage;
 
@@ -68,16 +69,23 @@ public class TCPHandler implements Runnable {
 				System.out.println("It was a recover.");
 				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
 				
+				// schedule synchronize request
+				SynchronizeRequest sr = new SynchronizeRequest(server, sender, clock, server.getNumServers());
+				server.getRequests().add(sr);
+				server.broadcastMessage(new RequestMessage(server, sr, null));
+
+			} else if (directive.equals(Server.SYNCHRONIZE)){
+				// get book data
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				String bookStr = in.readLine();
+				System.out.println("bookSTr: " + bookStr);
+				String clientStr = in.readLine();
+				System.out.println("clientStr: " + clientStr);
 				// sender is back online
+				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
 				sender.setOnline(true);
-				
-				// schedule recover response - TODO - this clock is invalid, will that break things?
-				RecoveryRequest rr = new RecoveryRequest(null, sender, clock, server.getNumServers());
-				server.getRequests().add(rr);
-
-				server.broadcastMessage(new RequestMessage(server, rr, null));
-
 			} else {
+			
 				System.out.println("It was something else.");
 				// remote server finished serving---update database to stay in
 				// line

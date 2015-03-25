@@ -1,6 +1,7 @@
 package request;
 
 import message.RecoveryMessage;
+import message.SynchronizeMessage;
 import record.ServerRecord;
 import server.Server;
 
@@ -10,13 +11,9 @@ public class RecoveryRequest extends Request{
 	}
 	@Override
 	public void fulfill() {
-		if (server != null){
-			server.broadcastMessage(new RecoveryMessage(this.server, null));
-			while (!this.server.hasRecovered());
-			System.out.println("Recovered.");
-		}
+		server.broadcastMessage(new RecoveryMessage(this.server, null));
+		System.out.println("Recovering...");
 		
-		// everyone else will do nothing, and wait for this guy to finish.
 	}
 	@Override
 	public boolean isMine(){
