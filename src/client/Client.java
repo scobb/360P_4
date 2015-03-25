@@ -88,14 +88,9 @@ public class Client {
 					
 					// if we get here, we can break the loop
 					break;
-				} catch (SocketTimeoutException e) {
-					System.out.println("Timed out... proceeding to next.");
-					// try the next server
-					continue;
 				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (NoSuchElementException e) {
-					System.out.println("Socket closed while we were reading.");
+					System.out.println("Server connection failed... proceeding to next.");
+					// try the next server
 					continue;
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -136,9 +131,10 @@ public class Client {
 		// print response to stdout
 		String next = in.readLine();
 		while (next.trim().equals("WAIT")){
+			// adding a bit of buffer for possible server timeouts.
 			System.out.println("Waiting...");
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
