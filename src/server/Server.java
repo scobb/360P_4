@@ -340,10 +340,6 @@ public class Server {
 				// when we get a connection, spin off a thread to handle it if
 				// we're online
 				route(s);
-				// if (!crashed) {
-				// ++clock;
-				// threadpool.submit(new TCPHandler(s, this));
-				// }
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

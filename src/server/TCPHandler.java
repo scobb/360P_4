@@ -31,7 +31,8 @@ public class TCPHandler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					socket.getInputStream()));
 			String msg = in.readLine();
 			// determine if this message came from client or server
 			System.out.println(msg.split("\\s+")[0]);
@@ -61,55 +62,62 @@ public class TCPHandler implements Runnable {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
 
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]) - 1);
-				server.getRequests().add(new ClientRequest(null, null, sender, clock, msg.split(":")[1], server.getNumServers()));
+				ServerRecord sender = server.getServerRecords().get(
+						Integer.parseInt(splitMsg[3]) - 1);
+				server.getRequests().add(
+						new ClientRequest(null, null, sender, clock, msg
+								.split(":")[1], server.getNumServers()));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
 
 			} else if (directive.equals(Server.RECOVER)) {
 				System.out.println("It was a recover.");
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]) - 1);
-				
+				ServerRecord sender = server.getServerRecords().get(
+						Integer.parseInt(splitMsg[3]) - 1);
+
 				// schedule synchronize request
-				SynchronizeRequest sr = new SynchronizeRequest(server, sender, clock, server.getNumServers());
+				SynchronizeRequest sr = new SynchronizeRequest(server, sender,
+						clock, server.getNumServers());
 				server.getRequests().add(sr);
 				server.broadcastMessage(new RequestMessage(server, sr, null));
 
-			} else if (directive.equals(Server.SYNCHRONIZE)){
+			} else if (directive.equals(Server.SYNCHRONIZE)) {
 				// get book data
 				String[] msgData = msg.split(":");
 
 				String bookDataString = msgData[1];
 				System.out.println("Got book data: " + bookDataString);
-				
-				// populate our book map from that data -- should be the same from all other servers
+
+				// populate our book map from that data -- should be the same
+				// from all other servers
 				String[] bookData = bookDataString.split("_");
-				for (int i = 0; i < bookData.length; ++i){
-					server.getBookMap().put("b" + (i+1), bookData[i]);
+				for (int i = 0; i < bookData.length; ++i) {
+					server.getBookMap().put("b" + (i + 1), bookData[i]);
 				}
-			
-				if (msgData.length > 2){
-					// TODO - be friendly.. probably need to implement .equals in Request
+
+				if (msgData.length > 2) {
+					// TODO - be friendly.. probably need to implement .equals
+					// in Request
 					String requestDataString = msgData[2];
 					System.out.println("Got requestData: " + requestDataString);
 					String[] requestData = requestDataString.split("_");
-					for (int i = 0; i < requestData.length; ++i){ 
+					for (int i = 0; i < requestData.length; ++i) {
 						Request r = RequestFactory.decode(requestData[i]);
 						if (!server.getRequests().contains(r)) {
 							server.getRequests().add(r);
 						}
 					}
-					
+
 				} else {
 					System.out.println("No client data.");
 				}
-				
+
 				// TODO - these could differ
-				
+
 				server.recoveryReceived();
 			} else {
-			
+
 				System.out.println("It was something else.");
 				// remote server finished serving---update database to stay in
 				// line
@@ -126,14 +134,15 @@ public class TCPHandler implements Runnable {
 
 	public void handleClientMessage(String msg) {
 		System.out.println("Handling client msg: " + msg);
-		if (server.hasRecovered()){
+		if (server.hasRecovered()) {
 			System.out.println("Server is healthy!");
-			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers());
+			ClientRequest cr = new ClientRequest(socket, server, null,
+					server.getClock(), msg, server.getNumServers());
 			server.getRequests().add(cr);
-	
+
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
-		} 
+		}
 		// Otherwise, we'll let the message time out and go to another server
 	}
 }

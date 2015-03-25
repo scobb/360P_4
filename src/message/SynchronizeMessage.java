@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 
 import record.ServerRecord;
 import request.Request;
+import request.SynchronizeRequest;
 import server.Server;
 
 // message FROM healthy server TO recovering server
@@ -13,7 +14,6 @@ public class SynchronizeMessage extends Message {
 
 	public SynchronizeMessage(Server from, ServerRecord to) {
 		super(from, to);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -35,18 +35,17 @@ public class SynchronizeMessage extends Message {
 			prefix = "_";
 		}
 		
-		// encode request data
-		String requestStr = "";
-		prefix = "";
+		// encode request data - add the request that spawned this message first thing.
+		String requestStr = (new SynchronizeRequest(from, to, 0, 0)).encode();
+		prefix = "_";
 		for (Request r : from.getRequests()){
 			requestStr += (prefix + r.encode());
-			prefix = "_";
 		}
 
 		// send encoded recovery with books and clients.
 		out.println(Server.SERVER + " " + Server.SYNCHRONIZE + " "
 				+ from.getClock() + " " + from.getServerId() + " :" + bookStr + ":" + requestStr);
-
+		System.out.println("Finished with teh Synch request....");
 
 	}
 

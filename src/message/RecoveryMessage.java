@@ -28,7 +28,6 @@ public class RecoveryMessage extends Message{
 
 	@Override
 	public void handleTimeout() {
-		// TODO increment "from"'s heard from?
 		
 	}
 

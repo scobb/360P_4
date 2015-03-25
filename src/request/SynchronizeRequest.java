@@ -1,5 +1,6 @@
 package request;
 
+import message.FinishedMessage;
 import message.SynchronizeMessage;
 import record.ServerRecord;
 import server.Server;
@@ -23,13 +24,13 @@ public class SynchronizeRequest extends Request{
 			
 			// this server is alive again.
 			sr.setOnline(true);
+			
+			server.broadcastMessage(new FinishedMessage(server, sr));
 		}
 	}
 
 	@Override
-	public void fulfillSilently(Server server) {
-		fulfill();
-	}
+	public void fulfillSilently(Server server) {}
 
 	@Override
 	public String encode() {
