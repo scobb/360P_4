@@ -1,5 +1,7 @@
 package message;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
@@ -12,12 +14,14 @@ public class RecoveryMessage extends Message{
 	public RecoveryMessage(Server from, ServerRecord to) {
 		super(from, to);
 	}
+	
+	public void ping(){}
 
 	@Override
-	public void communicate(Scanner in, PrintWriter out) {
+	public void communicate(BufferedReader in, PrintWriter out) throws IOException {
 		// send recover request
 		out.println(Server.SERVER);
-		out.println(Server.SERVER + " " + Server.RECOVER);
+		out.println(Server.SERVER + " " + Server.RECOVER + " " + from.getClock() + " " + from.getServerId());
 		out.flush();
 		
 	}

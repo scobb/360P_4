@@ -10,7 +10,7 @@ public abstract class Request {
 	protected int acksReceived;
 	protected Server server;
 	protected ServerRecord sr;
-	
+	public void ping(){}
 	public Request(Server server, ServerRecord sr, int clock) {
 		this.server = server;
 		this.sr = sr;

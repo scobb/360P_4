@@ -62,17 +62,6 @@ public class ClientRequest extends Request{
 		System.out.println("numServed: " + server.getNumServed());
 		if (server.getCurrentScheduledFailure() != null
 				&& server.getCurrentScheduledFailure().hasFailed(server.getNumServed())) {
-//			try {
-//				Socket s = new Socket(server.getAddr(), server.getPort());
-//				PrintWriter selfOut = new PrintWriter(s.getOutputStream());
-//				System.out.println("Sending the FAIL message.");
-//				selfOut.println("FAIL");
-//				selfOut.flush();
-//				System.out.println("Sent it.");
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 			server.fail();
 		}
 		
@@ -80,9 +69,23 @@ public class ClientRequest extends Request{
 	public String getMsg(){
 		return reqString;
 	}
+	@Override
+
+	public void ping(){
+		PrintWriter out;
+		try {
+			out = new PrintWriter(s.getOutputStream());
+			out.println("WAIT");
+			out.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void fulfillSilently(Server server) {
 		server.processRequest(reqString);
 	}
+
 }

@@ -1,6 +1,8 @@
 package server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
@@ -26,8 +28,8 @@ public class TCPHandler implements Runnable {
 	@Override
 	public void run() {
 		try {
-			Scanner in = new Scanner(socket.getInputStream());
-			String msg = in.nextLine();
+			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			String msg = in.readLine();
 			// determine if this message came from client or server
 			System.out.println(msg.split("\\s+")[0]);
 			if (msg.split("\\s+")[0].trim().equals("SERVER")) {

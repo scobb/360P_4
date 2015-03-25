@@ -1,6 +1,9 @@
 package client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -91,6 +94,11 @@ public class Client {
 					continue;
 				} catch (IOException e) {
 					e.printStackTrace();
+				} catch (NoSuchElementException e) {
+					System.out.println("Socket closed while we were reading.");
+					continue;
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}
@@ -113,19 +121,28 @@ public class Client {
 		s.connect(new InetSocketAddress(this.add, port), Server.TIMEOUT_MS);
 		
 		// we'll communicate through streams: scanner and printwriter
-		Scanner in = new Scanner(s.getInputStream());
+		BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
 		System.out.println("Sending request.");
+		
+		// routing msg
 		out.println("CLIENT");
+
 		// send request
 		out.println(send);
-
 		System.out.println("Printing Response.");
+		s.setSoTimeout(Server.TIMEOUT_MS);
 		// print response to stdout
-		String next = in.nextLine();
-		if (next.equals("FAIL")){
-			throw new SocketTimeoutException("timed out");
+		String next = in.readLine();
+		while (next.trim().equals("WAIT")){
+			System.out.println("Waiting...");
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			next = in.readLine();
 		}
 		System.out.println(next);
 		System.out.println("Printed.");

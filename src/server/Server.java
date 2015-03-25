@@ -1,6 +1,8 @@
 package server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -167,6 +169,8 @@ public class Server {
 				m.ackReceived();
 			}
 		}
+		// if everyone else is offline, I might need to serve now.
+		serveIfReady();
 	}
 
 	public void broadcastScheduledRequests() {
@@ -180,6 +184,7 @@ public class Server {
 			// send request to other servers
 			broadcastMessage(new RequestMessage(this, cr, null));
 		}
+		
 	}
 
 	/**
@@ -191,19 +196,25 @@ public class Server {
 		System.out.println("FAILING.");
 		// update state
 		crashed = true;
+		try {
+			tcpSocket.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
 		// reset state
 		numServed = 0;
 		numRecoveriesReceived = 0;
 		
 		// close existing socket connections
-		System.out.println("Numrequests: " + requests.size());
-		for (Request cr: requests){
-			System.out.println("Checking cr: " + cr);
-			if (cr.getServer() != null){
-				cr.fail();
-			}
-		}
+//		System.out.println("Numrequests: " + requests.size());
+//		for (Request cr: requests){
+//			System.out.println("Checking cr: " + cr);
+//			if (cr.getServer() != null){
+//				cr.fail();
+//			}
+//		}
 
 		// clear state - requests become empty.
 		requests.clear();
@@ -304,15 +315,15 @@ public class Server {
 	public void route(Socket s) throws IOException {
 
 		System.out.println("Routing");
-		Scanner in = new Scanner(s.getInputStream());
-		String switchVal = in.nextLine();
+		BufferedReader in = new BufferedReader(new InputStreamReader((s.getInputStream())));
+		String switchVal = in.readLine();
 		System.out.println("switchVal: " + switchVal);
 		if (switchVal.equals(SERVER)) {
 			++clock;
-			(new TCPHandler(s, this)).handleServerMessage(in.nextLine());
+			(new TCPHandler(s, this)).handleServerMessage(in.readLine());
 		} else if (switchVal.equals(CLIENT)) {
 			++clock;
-			(new TCPHandler(s, this)).handleClientMessage(in.nextLine());
+			(new TCPHandler(s, this)).handleClientMessage(in.readLine());
 		} else {
 			// time to crash
 			fail();
