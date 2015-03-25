@@ -199,22 +199,12 @@ public class Server {
 		try {
 			tcpSocket.close();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
 		// reset state
 		numServed = 0;
 		numRecoveriesReceived = 0;
-		
-		// close existing socket connections
-//		System.out.println("Numrequests: " + requests.size());
-//		for (Request cr: requests){
-//			System.out.println("Checking cr: " + cr);
-//			if (cr.getServer() != null){
-//				cr.fail();
-//			}
-//		}
 
 		// clear state - requests become empty.
 		requests.clear();
@@ -236,7 +226,10 @@ public class Server {
 		updateCurrentScheduledFailure();
 
 		// schedule a recoveryRecord
-		requests.add(new RecoveryRequest(this, null, this.clock));
+		requests.add(new RecoveryRequest(this, null, this.clock, this.numServers));
+		
+		// restart the server
+		startServer();
 	}
 
 	public void updateCurrentScheduledFailure() {

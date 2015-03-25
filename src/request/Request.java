@@ -5,16 +5,18 @@ import java.net.Socket;
 import record.ServerRecord;
 import server.Server;
 
-public abstract class Request {
+public abstract class Request implements Comparable<Request> {
 	protected int clock;
 	protected int acksReceived;
+	protected int numServers;
 	protected Server server;
 	protected ServerRecord sr;
 	public void ping(){}
-	public Request(Server server, ServerRecord sr, int clock) {
+	public Request(Server server, ServerRecord sr, int clock, int numServers) {
 		this.server = server;
 		this.sr = sr;
 		this.clock = clock;
+		this.numServers = numServers;
 		acksReceived = 0;
 	}
 	public boolean isMine(){
@@ -56,7 +58,7 @@ public abstract class Request {
 	}
 
 	public boolean isValid() {
-		System.out.println("isValid(): " + (acksReceived >= this.server.getNumServers() - 1));
-		return acksReceived >= this.server.getNumServers() - 1;
+		System.out.println("isValid(): " + (acksReceived >= numServers - 1));
+		return acksReceived >= numServers - 1;
 	}
 }

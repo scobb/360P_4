@@ -5,8 +5,8 @@ import record.ServerRecord;
 import server.Server;
 
 public class RecoveryRequest extends Request{
-	public RecoveryRequest(Server server, ServerRecord sr, int clock){
-		super(server, sr, clock);
+	public RecoveryRequest(Server server, ServerRecord sr, int clock, int numServers){
+		super(server, sr, clock, numServers);
 	}
 	@Override
 	public void fulfill() {
@@ -23,9 +23,7 @@ public class RecoveryRequest extends Request{
 		return true;
 	}
 	@Override
-	public void fail(){
-		
-	}
+	public void fail(){}
 	@Override
 	public void fulfillSilently(Server server) {
 		fulfill();

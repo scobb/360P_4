@@ -59,7 +59,7 @@ public class TCPHandler implements Runnable {
 				System.out.println("It was a request.");
 
 				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
-				server.getRequests().add(new ClientRequest(null, null, sender, clock, msg.split(":")[1]));
+				server.getRequests().add(new ClientRequest(null, null, sender, clock, msg.split(":")[1], server.getNumServers()));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
@@ -72,7 +72,7 @@ public class TCPHandler implements Runnable {
 				sender.setOnline(true);
 				
 				// schedule recover response - TODO - this clock is invalid, will that break things?
-				RecoveryRequest rr = new RecoveryRequest(null, sender, clock);
+				RecoveryRequest rr = new RecoveryRequest(null, sender, clock, server.getNumServers());
 				server.getRequests().add(rr);
 
 				server.broadcastMessage(new RequestMessage(server, rr, null));
@@ -96,16 +96,16 @@ public class TCPHandler implements Runnable {
 		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()){
 			System.out.println("Server is healthy!");
-			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg);
+			ClientRequest cr = new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers());
 			server.getRequests().add(cr);
 	
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
 		} else {
-			(new ClientRequest(socket, server, null, server.getClock(), msg)).fail();
+			(new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers())).fail();
 			System.out.println("Server is broken :(");
 			// clock not valid yet. Should not broadcast.
-			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg));
+			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers()));
 			
 		}
 	}

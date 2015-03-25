@@ -13,8 +13,8 @@ public class ClientRequest extends Request{
 	private String reqString;
 
 	public ClientRequest(Socket s, Server server, ServerRecord sr, int clock,
-			String reqString) {
-		super(server, sr, clock);
+			String reqString, int numServers) {
+		super(server, sr, clock, numServers);
 		this.s = s;
 		this.reqString = reqString;
 	}
