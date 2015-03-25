@@ -20,6 +20,8 @@ public class StdInHandler implements Runnable{
 				s.addScheduledFailure(in.nextLine());
 			} catch (NoSuchElementException e) {
 				break;
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		
