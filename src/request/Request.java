@@ -50,7 +50,7 @@ public abstract class Request implements Comparable<Request> {
 	
 	abstract public void fail();
 	public String getMsg(){
-		return "";
+		return " ";
 	}
 	public abstract void fulfill();
 	public abstract void fulfillSilently(Server server);
