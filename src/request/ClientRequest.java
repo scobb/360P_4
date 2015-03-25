@@ -90,7 +90,7 @@ public class ClientRequest extends Request{
 
 	@Override
 	public String encode() {
-		return "C|" + clock + "|" + reqString + "|" + numServers;
+		return "C|" + sr.getId() + "|" + clock + "|" + reqString + "|" + numServers;
 	}
 
 }

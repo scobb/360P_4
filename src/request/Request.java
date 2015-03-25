@@ -19,6 +19,15 @@ public abstract class Request implements Comparable<Request> {
 		this.numServers = numServers;
 		acksReceived = 0;
 	}
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Request){
+			Request otherR = (Request)other;
+			return this.clock == otherR.clock &&
+					this.sr.getId() == otherR.sr.getId();
+		}
+		return super.equals(other);
+	}
 	public boolean isMine(){
 		System.out.println("isMine(): " + (server != null));
 		return server != null;

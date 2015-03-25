@@ -35,6 +35,6 @@ public class RecoveryRequest extends Request{
 	@Override
 	public String encode() {
 		// TODO Auto-generated method stub
-		return "R|" + clock + "|" + numServers;
+		return "R|" + sr.getClock() + "|" +  clock + "|" + numServers;
 	}
 }

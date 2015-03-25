@@ -33,7 +33,7 @@ public class SynchronizeRequest extends Request{
 
 	@Override
 	public String encode() {
-		return "S|" + clock + "|" + numServers;
+		return "S|" + sr.getId() + "|" +  clock + "|" + numServers;
 	}
 
 }
