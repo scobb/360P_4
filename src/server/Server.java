@@ -82,6 +82,7 @@ public class Server {
 		clock = 0;
 		crashed = false;
 		numRecoveriesReceived = 0;
+		threadpool = Executors.newCachedThreadPool();
 	}
 
 	// incrementors
@@ -289,11 +290,15 @@ public class Server {
 	 * @param s
 	 *            config string for failure to be scheduled
 	 */
-	public void addScheduledFailure(String s) {
+	public synchronized void addScheduledFailure(String s) {
+		System.out.println("Adding scheduled failure: " + s);
 		String[] split = s.split("\\s+");
 		int k = Integer.parseInt(split[1]);
 		int delta = Integer.parseInt(split[2]);
 		scheduledFailures.add(new FailureRecord(k, delta));
+		if (this.currentScheduledFailure == null){
+			this.currentScheduledFailure = scheduledFailures.get(0);
+		}
 	}
 
 	/**
@@ -329,7 +334,6 @@ public class Server {
 	 * 
 	 */
 	public void listen() {
-		threadpool = Executors.newCachedThreadPool();
 		Socket s;
 		try {
 			while ((s = tcpSocket.accept()) != null) {
@@ -440,17 +444,21 @@ public class Server {
 		for (int i = 0; i < s.numServers; ++i) {
 			s.addServerRecord(sc.nextLine(), i);
 		}
-
-		// get records of scheduled crash
-		while (sc.hasNext()) {
-			s.addScheduledFailure(sc.nextLine());
-		}
-		s.updateCurrentScheduledFailure();
+		
+		// set up the listener thread for std in
+		s.listenForFailures(sc);
 
 		// start a server
 		s.startServer();
 
 		// after that, we'll poll for TCP communications
 		s.listen();
+	}
+
+	private void listenForFailures(Scanner sc) {
+		System.out.println("submitting std in handler...");
+		this.threadpool.submit(new StdInHandler(this, sc));
+		// TODO Auto-generated method stub
+		
 	}
 }
