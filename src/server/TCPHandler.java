@@ -11,6 +11,8 @@ import java.util.Scanner;
 import record.ServerRecord;
 import request.ClientRequest;
 import request.RecoveryRequest;
+import request.Request;
+import request.RequestFactory;
 import request.SynchronizeRequest;
 import message.FinishedMessage;
 import message.RequestMessage;
@@ -59,7 +61,7 @@ public class TCPHandler implements Runnable {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
 
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
+				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]) - 1);
 				server.getRequests().add(new ClientRequest(null, null, sender, clock, msg.split(":")[1], server.getNumServers()));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
@@ -67,7 +69,7 @@ public class TCPHandler implements Runnable {
 
 			} else if (directive.equals(Server.RECOVER)) {
 				System.out.println("It was a recover.");
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
+				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]) - 1);
 				
 				// schedule synchronize request
 				SynchronizeRequest sr = new SynchronizeRequest(server, sender, clock, server.getNumServers());
@@ -76,14 +78,36 @@ public class TCPHandler implements Runnable {
 
 			} else if (directive.equals(Server.SYNCHRONIZE)){
 				// get book data
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				String bookStr = in.readLine();
-				System.out.println("bookSTr: " + bookStr);
-				String clientStr = in.readLine();
-				System.out.println("clientStr: " + clientStr);
-				// sender is back online
-				ServerRecord sender = server.getServerRecords().get(Integer.parseInt(splitMsg[3]));
-				sender.setOnline(true);
+				String[] msgData = msg.split(":");
+
+				String bookDataString = msgData[1];
+				System.out.println("Got book data: " + bookDataString);
+				
+				// populate our book map from that data -- should be the same from all other servers
+				String[] bookData = bookDataString.split("_");
+				for (int i = 0; i < bookData.length; ++i){
+					server.getBookMap().put("b" + (i+1), bookData[i]);
+				}
+			
+				if (msgData.length > 2){
+					// TODO - be friendly.. probably need to implement .equals in Request
+					String requestDataString = msgData[2];
+					System.out.println("Got requestData: " + requestDataString);
+					String[] requestData = requestDataString.split("_");
+					for (int i = 0; i < requestData.length; ++i){ 
+						Request r = RequestFactory.decode(requestData[i]);
+						if (!server.getRequests().contains(r)) {
+							server.getRequests().add(r);
+						}
+					}
+					
+				} else {
+					System.out.println("No client data.");
+				}
+				
+				// TODO - these could differ
+				
+				server.recoveryReceived();
 			} else {
 			
 				System.out.println("It was something else.");
@@ -109,12 +133,7 @@ public class TCPHandler implements Runnable {
 	
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
-		} else {
-			(new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers())).fail();
-			System.out.println("Server is broken :(");
-			// clock not valid yet. Should not broadcast.
-			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg, server.getNumServers()));
-			
-		}
+		} 
+		// Otherwise, we'll let the message time out and go to another server
 	}
 }

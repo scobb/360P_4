@@ -55,4 +55,7 @@ public class ServerRecord {
 		return this.addr.equals(other.getAddr()) && this.port == other.getPort();
 	}
 
+	public boolean equals(ServerRecord other) {
+		return this.addr.equals(other.addr) && this.port == other.port;
+	}
 }

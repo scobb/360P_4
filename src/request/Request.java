@@ -61,4 +61,9 @@ public abstract class Request implements Comparable<Request> {
 		System.out.println("isValid(): " + (acksReceived >= numServers - 1));
 		return acksReceived >= numServers - 1;
 	}
+	public int getClock() {
+		// TODO Auto-generated method stub
+		return clock;
+	}
+	abstract public String encode();
 }

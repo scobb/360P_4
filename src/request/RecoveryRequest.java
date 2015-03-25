@@ -32,4 +32,9 @@ public class RecoveryRequest extends Request{
 		}
 		return super.isValid();
 	}
+	@Override
+	public String encode() {
+		// TODO Auto-generated method stub
+		return "R|" + clock + "|" + numServers;
+	}
 }

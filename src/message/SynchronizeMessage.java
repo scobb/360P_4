@@ -5,10 +5,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import record.ServerRecord;
+import request.Request;
 import server.Server;
 
 // message FROM healthy server TO recovering server
-public class SynchronizeMessage extends Message{
+public class SynchronizeMessage extends Message {
 
 	public SynchronizeMessage(Server from, ServerRecord to) {
 		super(from, to);
@@ -16,7 +17,8 @@ public class SynchronizeMessage extends Message{
 	}
 
 	@Override
-	public void ping() {}
+	public void ping() {
+	}
 
 	@Override
 	public void communicate(BufferedReader in, PrintWriter out)
@@ -24,18 +26,32 @@ public class SynchronizeMessage extends Message{
 		// server route
 		out.println(Server.SERVER);
 		
-		// send encoded header
-		out.println(Server.SERVER + " " + Server.SYNCHRONIZE + " " + from.getClock() + " " + from.getServerId());
+		// encode book data
+		String bookStr = "";
+		String prefix = "";
+		System.out.println("----------");
+		for (int i = 0; i < from.getBookMap().size(); ++i){
+			bookStr += (prefix + from.getBookMap().get("b" + (i + 1)));
+			prefix = "_";
+		}
 		
-		// TODO - send encoded books
-		out.println("omg books");
-		
-		// TODO - send encoded client list
-		out.println("omg clientz");
-		
+		// encode request data
+		String requestStr = "";
+		prefix = "";
+		for (Request r : from.getRequests()){
+			requestStr += (prefix + r.encode());
+			prefix = "_";
+		}
+
+		// send encoded recovery with books and clients.
+		out.println(Server.SERVER + " " + Server.SYNCHRONIZE + " "
+				+ from.getClock() + " " + from.getServerId() + " :" + bookStr + ":" + requestStr);
+
+
 	}
 
 	@Override
-	public void handleTimeout() {}
+	public void handleTimeout() {
+	}
 
 }

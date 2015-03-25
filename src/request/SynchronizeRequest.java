@@ -16,14 +16,24 @@ public class SynchronizeRequest extends Request{
 
 	@Override
 	public void fulfill() {
-		// send Synchronize message
-		SynchronizeMessage m = new SynchronizeMessage(server, sr);
-		m.send();
+		if (server != null) {
+			// send Synchronize message
+			SynchronizeMessage m = new SynchronizeMessage(server, sr);
+			m.send();
+			
+			// this server is alive again.
+			sr.setOnline(true);
+		}
 	}
 
 	@Override
 	public void fulfillSilently(Server server) {
 		fulfill();
+	}
+
+	@Override
+	public String encode() {
+		return "S|" + clock + "|" + numServers;
 	}
 
 }

@@ -88,4 +88,9 @@ public class ClientRequest extends Request{
 		server.processRequest(reqString);
 	}
 
+	@Override
+	public String encode() {
+		return "C|" + clock + "|" + reqString + "|" + numServers;
+	}
+
 }
