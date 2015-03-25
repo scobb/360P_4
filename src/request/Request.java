@@ -36,6 +36,8 @@ public abstract class Request {
 		}
 		return sr.getId();
 	}
+	
+	abstract public void fail();
 	public String getMsg(){
 		return "";
 	}

@@ -39,7 +39,7 @@ public class Server {
 	private ExecutorService threadpool;
 	private InetAddress addr;
 	private int port;
-	
+
 	// permanent state - not lost on crash
 	private boolean crashed;
 	private List<ServerRecord> serverRecords;
@@ -98,15 +98,16 @@ public class Server {
 		}
 		return !crashed;
 	}
+
 	public Map<String, String> getBookMap() {
 		return bookMap;
 	}
-	
-	public int getPort(){
+
+	public int getPort() {
 		return port;
 	}
-	
-	public InetAddress getAddr(){
+
+	public InetAddress getAddr() {
 		return addr;
 	}
 
@@ -158,9 +159,10 @@ public class Server {
 		System.out.println("Broadcasting...");
 		for (ServerRecord s : serverRecords) {
 			if (!s.equals(this) && s.isOnline()) {
-				System.out.println("Broadcasting to " + s.getAddr() + ":" + s.getPort());
+				System.out.println("Broadcasting to " + s.getAddr() + ":"
+						+ s.getPort());
 				m.setTo(s);
-				threadpool.submit(m);
+				m.send();
 			} else if (!s.isOnline()) {
 				m.ackReceived();
 			}
@@ -193,6 +195,15 @@ public class Server {
 		// reset state
 		numServed = 0;
 		numRecoveriesReceived = 0;
+		
+		// close existing socket connections
+		System.out.println("Numrequests: " + requests.size());
+		for (Request cr: requests){
+			System.out.println("Checking cr: " + cr);
+			if (cr.getServer() != null){
+				cr.fail();
+			}
+		}
 
 		// clear state - requests become empty.
 		requests.clear();
@@ -289,13 +300,17 @@ public class Server {
 	public void addServerRecord(String s, int id) {
 		serverRecords.add(new ServerRecord(s, id));
 	}
+
 	public void route(Socket s) throws IOException {
+
+		System.out.println("Routing");
 		Scanner in = new Scanner(s.getInputStream());
 		String switchVal = in.nextLine();
-		if (switchVal.equals(SERVER)){
+		System.out.println("switchVal: " + switchVal);
+		if (switchVal.equals(SERVER)) {
 			++clock;
 			(new TCPHandler(s, this)).handleServerMessage(in.nextLine());
-		} else if (switchVal.equals(CLIENT)){
+		} else if (switchVal.equals(CLIENT)) {
 			++clock;
 			(new TCPHandler(s, this)).handleClientMessage(in.nextLine());
 		} else {
@@ -316,10 +331,10 @@ public class Server {
 				// when we get a connection, spin off a thread to handle it if
 				// we're online
 				route(s);
-//				if (!crashed) {
-//					++clock;
-//					threadpool.submit(new TCPHandler(s, this));
-//				}
+				// if (!crashed) {
+				// ++clock;
+				// threadpool.submit(new TCPHandler(s, this));
+				// }
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -395,7 +410,8 @@ public class Server {
 	public void serveIfReady() {
 		System.out.println("Serving if ready: " + getRequests().peek());
 		// while loop means we can handle multiple in a row if we're up.
-		while (getRequests().peek() != null && getRequests().peek().isValid() && getRequests().peek().isMine()) {
+		while (getRequests().peek() != null && getRequests().peek().isValid()
+				&& getRequests().peek().isMine()) {
 			// time to process this request
 			Request req = requests.remove();
 			System.out.println("Got a valid request. Fulfilling.");

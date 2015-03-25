@@ -123,7 +123,11 @@ public class Client {
 
 		System.out.println("Printing Response.");
 		// print response to stdout
-		System.out.println(in.nextLine());
+		String next = in.nextLine();
+		if (next.equals("FAIL")){
+			throw new SocketTimeoutException("timed out");
+		}
+		System.out.println(next);
 		System.out.println("Printed.");
 
 		// clean up -- not sure if these are redundant. Stream closes if any

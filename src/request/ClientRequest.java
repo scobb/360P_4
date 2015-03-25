@@ -18,6 +18,19 @@ public class ClientRequest extends Request{
 		this.s = s;
 		this.reqString = reqString;
 	}
+	
+	public void fail(){
+		System.out.println("failing in client request.");
+		try {
+			PrintWriter out = new PrintWriter(s.getOutputStream());
+			out.println("FAIL");
+			out.flush();
+			s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 
 	@Override
@@ -49,6 +62,17 @@ public class ClientRequest extends Request{
 		System.out.println("numServed: " + server.getNumServed());
 		if (server.getCurrentScheduledFailure() != null
 				&& server.getCurrentScheduledFailure().hasFailed(server.getNumServed())) {
+//			try {
+//				Socket s = new Socket(server.getAddr(), server.getPort());
+//				PrintWriter selfOut = new PrintWriter(s.getOutputStream());
+//				System.out.println("Sending the FAIL message.");
+//				selfOut.println("FAIL");
+//				selfOut.flush();
+//				System.out.println("Sent it.");
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			server.fail();
 		}
 		

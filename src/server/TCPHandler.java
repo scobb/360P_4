@@ -100,6 +100,7 @@ public class TCPHandler implements Runnable {
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
 		} else {
+			(new ClientRequest(socket, server, null, server.getClock(), msg)).fail();
 			System.out.println("Server is broken :(");
 			// clock not valid yet. Should not broadcast.
 			server.scheduleClientRequest(new ClientRequest(socket, server, null, server.getClock(), msg));

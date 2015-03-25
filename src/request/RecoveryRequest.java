@@ -23,6 +23,10 @@ public class RecoveryRequest extends Request{
 		return true;
 	}
 	@Override
+	public void fail(){
+		
+	}
+	@Override
 	public void fulfillSilently(Server server) {
 		fulfill();
 	}

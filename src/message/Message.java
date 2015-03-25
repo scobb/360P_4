@@ -10,7 +10,7 @@ import java.util.Scanner;
 import record.ServerRecord;
 import server.Server;
 
-public abstract class Message implements Runnable {
+public abstract class Message {
 	protected Server from;
 	protected ServerRecord to;
 
@@ -31,8 +31,7 @@ public abstract class Message implements Runnable {
 
 	public abstract void handleTimeout();
 
-	@Override
-	public void run() {
+	public void send() {
 		Socket s = null;
 		try {
 			// talk to the server on the socket
