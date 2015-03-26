@@ -36,10 +36,13 @@ public class SynchronizeMessage extends Message {
 		}
 		
 		// encode request data - add the request that spawned this message first thing.
-		String requestStr = "";
-		prefix = "";
+		//String requestStr = "";
+		String requestStr = (new SynchronizeRequest(null, null, 0, 0)).encode();
+		//prefix = "";
+		prefix = "_";
 		for (Request r : from.getRequests()){
 			requestStr += (prefix + r.encode());
+			prefix = "_";
 		}
 
 		// send encoded recovery with books and clients.

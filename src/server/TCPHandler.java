@@ -57,11 +57,20 @@ public class TCPHandler implements Runnable {
 		System.out.println("Directive: " + directive);
 		int clock = Integer.parseInt(splitMsg[2]);
 		server.setClock(clock + 1);
+
+		// we'll only accept the synchronize message prior to recovering.
+		if (!server.hasRecovered() && !directive.equals(Server.SYNCHRONIZE)
+				&& !directive.equals(Server.SYNCHRONIZE)) {
+			return;
+		}
 		try {
 			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
-				server.getRequests().add(RequestFactory.decode(msg.split("%")[1]));
+				Request r = RequestFactory.decode(msg.split("%")[1]);
+				if (!server.getRequests().contains(r)) {
+					server.getRequests().add(r);
+				}
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
@@ -96,7 +105,8 @@ public class TCPHandler implements Runnable {
 					// multiple servers.
 					String requestDataString = msgData[2];
 					System.out.println("Got requestData: " + requestDataString);
-					System.out.println("Before updating requests: " + server.getRequests());
+					System.out.println("Before updating requests: "
+							+ server.getRequests());
 					String[] requestData = requestDataString.split("_");
 					for (int i = 0; i < requestData.length; ++i) {
 						Request r = RequestFactory.decode(requestData[i]);
@@ -104,8 +114,10 @@ public class TCPHandler implements Runnable {
 							server.getRequests().add(r);
 						}
 					}
-					System.out.println("Done updating requests: " + server.getRequests());
-					// System.out.println("server.getRequests().size(): " + server.getRequests().size());
+					System.out.println("Done updating requests: "
+							+ server.getRequests());
+					// System.out.println("server.getRequests().size(): " +
+					// server.getRequests().size());
 
 				} else {
 					System.out.println("No client data.");

@@ -413,9 +413,7 @@ public class Server {
 	public void updateFromRemoteComplete() {
 		// remove next from queue and process, but don't output
 		System.out.println("Updating from complete. Fulfilling silently.");
-		if (!requests.isEmpty()) {
-			requests.remove().fulfillSilently(this);
-		}
+		requests.remove().fulfillSilently(this);
 	}
 
 	/**
