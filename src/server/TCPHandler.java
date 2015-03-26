@@ -129,9 +129,8 @@ public class TCPHandler implements Runnable {
 				// increment the number of recoveries received to know whether
 				// we're healthy enough to serve clients
 				server.recoveryReceived();
-				if (server.hasRecovered()){
-					server.serveIfReady();
-				}
+				server.serveIfReady();
+				
 
 			} else {
 

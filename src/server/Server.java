@@ -90,6 +90,7 @@ public class Server {
 	// incrementors
 	public void recoveryReceived() {
 		++numRecoveriesReceived;
+		System.out.println("Received a recovery. Now have " + numRecoveriesReceived);
 	}
 
 	public void clientServed() {
@@ -172,7 +173,9 @@ public class Server {
 						+ s.getPort());
 				m.setTo(s);
 				m.send();
-			} else if (!s.isOnline()) {
+			} 
+			else if (!s.isOnline()) {
+				System.out.println("Server " + s.getId() + " was offline.");
 				m.ackReceived();
 			}
 		}
@@ -424,7 +427,7 @@ public class Server {
 		System.out.println("Serving if ready: " + getRequests());
 		// while loop means we can handle multiple in a row if we're up.
 		while (getRequests().peek() != null && getRequests().peek().isValid()
-				&& getRequests().peek().isMine()) {
+				&& getRequests().peek().isMine() && hasRecovered()) {
 			// time to process this request
 			System.out.println("Got a valid request. Fulfilling.");
 			Request req = null;

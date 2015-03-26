@@ -31,6 +31,7 @@ public class RecoveryMessage extends Message{
 
 	@Override
 	public void handleTimeout() {
+		System.out.println("RecoveryMessage timed out.");
 		from.recoveryReceived();
 	}
 

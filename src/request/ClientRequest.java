@@ -77,8 +77,6 @@ public class ClientRequest extends Request{
 	}
 
 	public String toString(){
-		if (sr != null) {
-			return encode();
-		} else return "C|" + clock + "|" + reqString + "|";
+		return encode();
 	}
 }
