@@ -11,6 +11,7 @@ import request.ClientRequest;
 import request.Request;
 import request.RequestFactory;
 import request.SynchronizeRequest;
+import message.FinishedMessage;
 import message.RequestMessage;
 
 public class TCPHandler implements Runnable {
@@ -62,7 +63,7 @@ public class TCPHandler implements Runnable {
 			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
-				Request r = RequestFactory.decode(msg.split("%")[1]);
+				Request r = RequestFactory.decode(msg.split("%")[1], server);
 				if (!server.getRequests().contains(r)) {
 					server.getRequests().add(r);
 				}
@@ -73,17 +74,18 @@ public class TCPHandler implements Runnable {
 			} else if (directive.equals(Server.RECOVER)) {
 				System.out.println("It was a recover.");
 				ServerRecord sender = server.getServerRecords().get(
-						Integer.parseInt(splitMsg[3]) - 1);
+						Integer.parseInt(splitMsg[3]));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
+				System.out.println("Sending them my clock of " + server.getClock());
 				out.println(server.getClock());
 				out.flush();
 				out.close();
 
-				// schedule synchronize request
-				SynchronizeRequest sr = new SynchronizeRequest(server, sender,
-						clock, server.getNumServers());
-				server.getRequests().add(sr);
-				server.broadcastMessage(new RequestMessage(server, sr, null));
+//				// schedule synchronize request
+//				SynchronizeRequest sr = new SynchronizeRequest(server, sender,
+//						clock, server.getNumServers());
+//				server.getRequests().add(sr);
+//				server.broadcastMessage(new RequestMessage(server, sr, null));
 
 			} else if (directive.equals(Server.SYNCHRONIZE)) {
 				// get book data
@@ -109,7 +111,7 @@ public class TCPHandler implements Runnable {
 							+ server.getRequests());
 					String[] requestData = requestDataString.split("_");
 					for (int i = 0; i < requestData.length; ++i) {
-						Request r = RequestFactory.decode(requestData[i]);
+						Request r = RequestFactory.decode(requestData[i], server);
 						server.getRequests().add(r);
 //						if (!server.getRequests().contains(r)) {
 //							server.getRequests().add(r);
@@ -123,10 +125,13 @@ public class TCPHandler implements Runnable {
 				} else {
 					System.out.println("No client data.");
 				}
-
 				// increment the number of recoveries received to know whether
 				// we're healthy enough to serve clients
 				server.recoveryReceived();
+				if (server.hasRecovered()){
+					server.serveIfReady();
+				}
+
 			} else {
 
 				System.out.println("It was something else.");

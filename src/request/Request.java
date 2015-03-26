@@ -27,6 +27,7 @@ public abstract class Request implements Comparable<Request> {
 	public boolean equals(Object other) {
 		if (other instanceof Request) {
 			Request otherR = (Request) other;
+//			System.out.println(this.getId() + " == " + otherR.getId() + "?");
 			return this.clock == otherR.clock && this.getId() == otherR.getId();
 		}
 		return super.equals(other);
@@ -51,8 +52,10 @@ public abstract class Request implements Comparable<Request> {
 
 	private int getId() {
 		if (server != null) {
+//			System.out.println("server.getId(): " + server.getId());
 			return server.getId();
 		}
+//		System.out.println("sr.getId(): " + sr.getId());
 		return sr.getId();
 	}
 

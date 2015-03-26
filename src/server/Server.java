@@ -23,6 +23,7 @@ import record.FailureRecord;
 import record.ServerRecord;
 import request.ClientRequest;
 import request.Request;
+import request.SynchronizeRequest;
 
 /**
  * Server - Implements a distributed TCP server.
@@ -148,7 +149,7 @@ public class Server {
 	}
 
 	public int getId() {
-		return id;
+		return id - 1;
 	}
 
 	public ServerSocket getTcpSocket() {
@@ -171,7 +172,7 @@ public class Server {
 						+ s.getPort());
 				m.setTo(s);
 				m.send();
-			} else if (!s.isOnline()){
+			} else if (!s.isOnline()) {
 				m.ackReceived();
 			}
 		}
@@ -226,15 +227,25 @@ public class Server {
 
 		// restart the server
 		startServer();
-		
+
 		// request recovery
 		broadcastMessage(new RecoveryMessage(this, null));
 		System.out.println("Recovering...");
+
+		// clock now valid. Send SynchronizeRequest
+		Request r = new SynchronizeRequest(this,
+				serverRecords.get(id - 1), clock, numServers);
+		System.out.println("Sending this synchronize request: " + r.encode());
+		broadcastMessage(new RequestMessage(this, new SynchronizeRequest(this,
+				serverRecords.get(id - 1), clock, numServers), null));
+
+		// now we wait for everyone to send me the sync info
 	}
 
 	public void updateCurrentScheduledFailure() {
 		if (scheduledFailures.size() > 0) {
-			System.out.println("Updating current scheduled failure from list: " + scheduledFailures);
+			System.out.println("Updating current scheduled failure from list: "
+					+ scheduledFailures);
 			currentScheduledFailure = scheduledFailures.remove(0);
 		} else {
 			System.out.println("Setting CSF to null.");
@@ -313,20 +324,16 @@ public class Server {
 
 	public void route(Socket s) throws IOException {
 
+		++clock;
 		System.out.println("Routing");
 		BufferedReader in = new BufferedReader(new InputStreamReader(
 				(s.getInputStream())));
 		String switchVal = in.readLine();
 		System.out.println("switchVal: " + switchVal);
 		if (switchVal.equals(SERVER)) {
-			++clock;
 			(new TCPHandler(s, this)).handleServerMessage(in.readLine());
-		} else if (switchVal.equals(CLIENT)) {
-			++clock;
-			(new TCPHandler(s, this)).handleClientMessage(in.readLine());
 		} else {
-			// time to crash
-			fail();
+			(new TCPHandler(s, this)).handleClientMessage(in.readLine());
 		}
 	}
 
@@ -414,20 +421,33 @@ public class Server {
 	 * 
 	 */
 	public void serveIfReady() {
-		System.out.println("Serving if ready: " + getRequests().peek());
+		System.out.println("Serving if ready: " + getRequests());
 		// while loop means we can handle multiple in a row if we're up.
 		while (getRequests().peek() != null && getRequests().peek().isValid()
 				&& getRequests().peek().isMine()) {
 			// time to process this request
-			Request req = requests.remove();
 			System.out.println("Got a valid request. Fulfilling.");
+			Request req = null;
+			if (getRequests().peek() instanceof SynchronizeRequest) {
+				req = getRequests().peek();
+				System.out.println("Only peeking.");
+				System.out.println("Queue: " + getRequests());
+			} else {
+				req = requests.remove();
+			}
 
 			// fulfill the request
 			req.fulfill();
-			
+
+			// if this was a sync request, we'll break here and wait for the
+			// finished message from the receiving server
+			if (req instanceof SynchronizeRequest) {
+				break;
+			}
+			System.out.println("Sending finished message.");
 			// finished.
 			broadcastMessage(new FinishedMessage(this, null));
-			
+
 			// is it time to fail?
 			System.out.println("numServed: " + numServed);
 			if (getCurrentScheduledFailure() != null

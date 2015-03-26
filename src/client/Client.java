@@ -142,7 +142,7 @@ public class Client {
 			// adding a bit of buffer for possible server timeouts.
 			//System.out.println("Waiting...");
 			try {
-				Thread.sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

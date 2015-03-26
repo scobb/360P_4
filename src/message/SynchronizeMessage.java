@@ -36,10 +36,10 @@ public class SynchronizeMessage extends Message {
 		}
 		
 		// encode request data - add the request that spawned this message first thing.
-		//String requestStr = "";
-		String requestStr = (new SynchronizeRequest(from, to, 0, 0)).encode();
-		//prefix = "";
-		prefix = "_";
+		String requestStr = "";
+		//String requestStr = (new SynchronizeRequest(from, to, 0, 0)).encode();
+		prefix = "";
+		//prefix = "_";
 		for (Request r : from.getRequests()){
 			requestStr += (prefix + r.encode());
 			prefix = "_";
