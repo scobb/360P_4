@@ -39,18 +39,8 @@ public class ClientRequest extends Request{
 			e.printStackTrace();
 		}
 
-		// request processed. Send the finished message.
-		server.broadcastMessage(new FinishedMessage(server, null));
-
 		// update number of clients served
 		server.clientServed();
-
-		// is it time to fail?
-		System.out.println("numServed: " + server.getNumServed());
-		if (server.getCurrentScheduledFailure() != null
-				&& server.getCurrentScheduledFailure().hasFailed(server.getNumServed())) {
-			server.fail();
-		}
 		
 	}
 	public String getMsg(){

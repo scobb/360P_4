@@ -21,8 +21,6 @@ public class SynchronizeRequest extends Request {
 
 			// this server is alive again.
 			sr.setOnline(true);
-
-			server.broadcastMessage(new FinishedMessage(server, sr));
 		}
 	}
 

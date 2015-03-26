@@ -24,6 +24,9 @@ public class RecoveryMessage extends Message{
 		out.println(Server.SERVER + " " + Server.RECOVER + " " + from.getClock() + " " + from.getId());
 		out.flush();
 		
+		// get new clock from server
+		from.setClock(Integer.parseInt(in.readLine()));
+		
 	}
 
 	@Override

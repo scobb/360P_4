@@ -15,6 +15,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import message.FinishedMessage;
 import message.Message;
 import message.RecoveryMessage;
 import message.RequestMessage;
@@ -131,6 +132,7 @@ public class Server {
 
 	public void setClock(int clock) {
 		this.clock = Math.max(this.clock, clock + 1);
+		System.out.println("clock updated to: " + this.clock);
 	}
 
 	public PriorityQueue<Request> getRequests() {
@@ -175,20 +177,6 @@ public class Server {
 		}
 		// if everyone else is offline, I might need to serve now.
 		serveIfReady();
-	}
-
-	public void broadcastScheduledRequests() {
-		for (ClientRequest cr : scheduledClientRequests) {
-			// update the request to have a valid clock.
-			cr.setClock(clock++);
-
-			// add to local queue
-			requests.add(cr);
-
-			// send request to other servers
-			broadcastMessage(new RequestMessage(this, cr, null));
-		}
-
 	}
 
 	/**
@@ -236,7 +224,6 @@ public class Server {
 		// update failure list
 		updateCurrentScheduledFailure();
 
-
 		// restart the server
 		startServer();
 		
@@ -247,8 +234,10 @@ public class Server {
 
 	public void updateCurrentScheduledFailure() {
 		if (scheduledFailures.size() > 0) {
+			System.out.println("Updating current scheduled failure from list: " + scheduledFailures);
 			currentScheduledFailure = scheduledFailures.remove(0);
 		} else {
+			System.out.println("Setting CSF to null.");
 			currentScheduledFailure = null;
 		}
 	}
@@ -435,6 +424,17 @@ public class Server {
 
 			// fulfill the request
 			req.fulfill();
+			
+			// finished.
+			broadcastMessage(new FinishedMessage(this, null));
+			
+			// is it time to fail?
+			System.out.println("numServed: " + numServed);
+			if (getCurrentScheduledFailure() != null
+					&& getCurrentScheduledFailure().hasFailed(numServed)) {
+				fail();
+				break;
+			}
 		}
 	}
 
@@ -466,12 +466,9 @@ public class Server {
 	private void listenForFailures(Scanner sc) {
 		System.out.println("submitting std in handler...");
 		this.threadpool.submit(new StdInHandler(this, sc));
-		// TODO Auto-generated method stub
-
 	}
 
 	public void setId(int id) {
-		// TODO Auto-generated method stub
 		this.id = id;
 	}
 }

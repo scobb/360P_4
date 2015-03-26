@@ -64,7 +64,7 @@ public class Client {
 		// did we receive a sleep instruction?
 		if (cmdSplit[0].equals(SLEEP)) {
 			// if so, put the thread to sleep for the requested time
-			System.out.println("Sleeping...");
+			//System.out.println("Sleeping...");
 			try {
 				Thread.sleep(Integer.parseInt(cmdSplit[1]));
 			} catch (NumberFormatException e) {
@@ -77,7 +77,7 @@ public class Client {
 			String book = cmdSplit[0];
 			String directive = cmdSplit[1];
 
-			System.out.println("Book: " + book + " Directive: " + directive);
+			//System.out.println("Book: " + book + " Directive: " + directive);
 			String request = id + " " + book + " " + directive;
 
 			for (ServerRecord sr : servers) {
@@ -89,8 +89,8 @@ public class Client {
 					// if we get here, we can break the loop
 					break;
 				} catch (IOException e) {
-					System.out
-							.println("Server connection failed... proceeding to next.");
+//					System.out
+//							.println("Server connection failed... proceeding to next.");
 					// try the next server
 					continue;
 				} catch (Exception e) {
@@ -110,7 +110,7 @@ public class Client {
 	 *            Port server will be listening on
 	 */
 	public void processTcp(String send, int port) throws IOException {
-		System.out.println("In processTcp");
+		//System.out.println("In processTcp");
 		Socket s = null;
 		// talk to the server on the socket
 		s = new Socket();
@@ -121,20 +121,20 @@ public class Client {
 				s.getInputStream()));
 		PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 
-		System.out.println("Sending request.");
+		//System.out.println("Sending request.");
 
 		// routing msg
 		out.println("CLIENT");
 
 		// send request
 		out.println(send);
-		System.out.println("Printing Response.");
+		//System.out.println("Printing Response.");
 		s.setSoTimeout(Server.TIMEOUT_MS);
 		// print response to stdout
 		String next = in.readLine();
 		while (next.trim().equals("WAIT")) {
 			// adding a bit of buffer for possible server timeouts.
-			System.out.println("Waiting...");
+			//System.out.println("Waiting...");
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException e) {
@@ -143,7 +143,7 @@ public class Client {
 			next = in.readLine();
 		}
 		System.out.println(next);
-		System.out.println("Printed.");
+		//System.out.println("Printed.");
 
 		// clean up -- not sure if these are redundant. Stream closes if any
 		// is called.
