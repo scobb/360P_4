@@ -33,7 +33,7 @@ public class RequestMessage extends Message{
 		// let the client know we haven't forgotten them.
 		// construct message
 		out.println("SERVER");
-		out.println("SERVER R " + from.getClock() + " " + from.getServerId() + " :" + cr.getMsg());
+		out.println("SERVER R " + from.getClock() + " %" + cr.encode());
 
 		
 		// wait for acknowledgement

@@ -37,4 +37,11 @@ public class RecoveryRequest extends Request{
 		// TODO Auto-generated method stub
 		return "R|" + sr.getClock() + "|" +  clock + "|" + numServers;
 	}
+	
+	public String toString() {
+		if (sr != null ) {
+			return encode();
+		}
+		return "R|" + clock;
+	}
 }

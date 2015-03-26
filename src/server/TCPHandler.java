@@ -61,12 +61,17 @@ public class TCPHandler implements Runnable {
 			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
-
-				ServerRecord sender = server.getServerRecords().get(
-						Integer.parseInt(splitMsg[3]) - 1);
-				server.getRequests().add(
-						new ClientRequest(null, null, sender, clock, msg
-								.split(":")[1], server.getNumServers()));
+				server.getRequests().add(RequestFactory.decode(msg.split("%")[1]));
+//				ServerRecord sender = server.getServerRecords().get(
+//						Integer.parseInt(splitMsg[3]) - 1);
+//				if (msg != "") {
+//					server.getRequests().add(
+//							new ClientRequest(null, null, sender, clock, msg
+//									.split(":")[1], server.getNumServers()));
+//				} else {
+//					server.getRequests().add(
+//							new SynchronizeRequest(null, sender, clock, 0));
+//				}
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
@@ -97,10 +102,11 @@ public class TCPHandler implements Runnable {
 				}
 
 				if (msgData.length > 2) {
-					// TODO - be friendly.. probably need to implement .equals
-					// in Request
+					// TODO - be friendly.. Need to test that this works with
+					// multiple servers.
 					String requestDataString = msgData[2];
 					System.out.println("Got requestData: " + requestDataString);
+					System.out.println("Before updating requests: " + server.getRequests());
 					String[] requestData = requestDataString.split("_");
 					for (int i = 0; i < requestData.length; ++i) {
 						Request r = RequestFactory.decode(requestData[i]);
@@ -108,13 +114,15 @@ public class TCPHandler implements Runnable {
 							server.getRequests().add(r);
 						}
 					}
+					System.out.println("Done updating requests: " + server.getRequests());
+					// System.out.println("server.getRequests().size(): " + server.getRequests().size());
 
 				} else {
 					System.out.println("No client data.");
 				}
 
-				// TODO - these could differ
-
+				// increment the number of recoveries received to know whether
+				// we're healthy enough to serve clients
 				server.recoveryReceived();
 			} else {
 

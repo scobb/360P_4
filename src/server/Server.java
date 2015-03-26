@@ -97,6 +97,8 @@ public class Server {
 	// getters
 	public boolean hasRecovered() {
 		if (crashed && numRecoveriesReceived >= numServers - 1) {
+			System.out.println("I have recovered.");
+			System.out.println("Server has recovered.");
 			crashed = false;
 			numRecoveriesReceived = 0;
 		}
@@ -199,6 +201,7 @@ public class Server {
 		// update state
 		crashed = true;
 		try {
+			// break existing connections
 			tcpSocket.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -210,11 +213,17 @@ public class Server {
 
 		// clear state - requests become empty.
 		requests.clear();
+		System.out.println("Requests cleared: " + requests);
 		scheduledClientRequests.clear();
 
 		// also, make all books available again
 		for (String bookKey : bookMap.keySet()) {
 			bookMap.put(bookKey, AVAILABLE);
+		}
+		
+		// and all servers are alive, as far we know
+		for (ServerRecord sr : serverRecords){
+			sr.setOnline(true);
 		}
 
 		// sleep
