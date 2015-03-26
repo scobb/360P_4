@@ -70,6 +70,7 @@ public class TCPHandler implements Runnable {
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();
+				server.serveIfReady();
 
 			} else if (directive.equals(Server.RECOVER)) {
 				System.out.println("It was a recover.");
@@ -158,6 +159,8 @@ public class TCPHandler implements Runnable {
 
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
+		} else {
+			System.out.println("NOT HEALTHY!");
 		}
 		// Otherwise, we'll let the message time out and go to another server
 	}

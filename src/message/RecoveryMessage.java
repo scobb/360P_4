@@ -31,7 +31,7 @@ public class RecoveryMessage extends Message{
 
 	@Override
 	public void handleTimeout() {
-		
+		from.recoveryReceived();
 	}
 
 }
