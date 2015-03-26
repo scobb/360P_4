@@ -164,11 +164,13 @@ public class Server {
 	public void broadcastMessage(Message m) {
 		System.out.println("Broadcasting...");
 		for (ServerRecord s : serverRecords) {
-			if (!s.equals(this)) {
+			if (!s.equals(this) && s.isOnline()) {
 				System.out.println("Broadcasting to " + s.getAddr() + ":"
 						+ s.getPort());
 				m.setTo(s);
 				m.send();
+			} else if (!s.isOnline()){
+				m.ackReceived();
 			}
 		}
 		// if everyone else is offline, I might need to serve now.
