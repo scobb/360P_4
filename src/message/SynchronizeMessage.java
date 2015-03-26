@@ -37,7 +37,7 @@ public class SynchronizeMessage extends Message {
 		
 		// encode request data - add the request that spawned this message first thing.
 		//String requestStr = "";
-		String requestStr = (new SynchronizeRequest(null, null, 0, 0)).encode();
+		String requestStr = (new SynchronizeRequest(from, to, 0, 0)).encode();
 		//prefix = "";
 		prefix = "_";
 		for (Request r : from.getRequests()){
@@ -47,8 +47,9 @@ public class SynchronizeMessage extends Message {
 
 		// send encoded recovery with books and clients.
 		out.println(Server.SERVER + " " + Server.SYNCHRONIZE + " "
-				+ from.getClock() + " " + from.getServerId() + " :" + bookStr + ":" + requestStr);
+				+ from.getClock() + " " + from.getId() + " :" + bookStr + ":" + requestStr);
 		System.out.println("Finished with teh Synch request....");
+		
 
 	}
 

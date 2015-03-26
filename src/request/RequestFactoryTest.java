@@ -24,13 +24,5 @@ public class RequestFactoryTest {
 		Request newR = RequestFactory.decode(encodedR);
 		assertEquals(r, newR);
 	}
-	
-	@Test
-	public void RecoveryRequestTest() {
-		RecoveryRequest r = new RecoveryRequest(null, new ServerRecord(null, 1), 1, 2);
-		String encodedR = r.encode();
-		
-		Request newR = RequestFactory.decode(encodedR);
-		assertEquals(r, newR);
-	}
+
 }

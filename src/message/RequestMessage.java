@@ -29,7 +29,7 @@ public class RequestMessage extends Message{
 	@Override
 	public void communicate(BufferedReader in, PrintWriter out) throws IOException, IOException {
 		System.out.println("Communicating...");
-		System.out.println("Message: SERVER R " + from.getClock() + " " + from.getServerId() + " :" + cr.getMsg());
+		System.out.println("Message: SERVER R " + from.getClock() + " " + from.getId() + " :" + cr.getMsg());
 		// let the client know we haven't forgotten them.
 		// construct message
 		out.println("SERVER");

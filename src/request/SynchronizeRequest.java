@@ -13,10 +13,6 @@ public class SynchronizeRequest extends Request {
 	}
 
 	@Override
-	public void fail() {
-	}
-
-	@Override
 	public void fulfill() {
 		if (server != null) {
 			// send Synchronize message
@@ -37,8 +33,8 @@ public class SynchronizeRequest extends Request {
 	@Override
 	public String encode() {
 		int id = -1;
-		if (sr != null) {
-			id = sr.getId();
+		if (server != null) {
+			id = server.getId();
 		}
 		return "S|" + id + "|" + clock + "|" + numServers;
 	}

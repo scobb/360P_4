@@ -18,19 +18,6 @@ public class ClientRequest extends Request{
 		this.s = s;
 		this.reqString = reqString;
 	}
-	
-	public void fail(){
-		System.out.println("failing in client request.");
-		try {
-			PrintWriter out = new PrintWriter(s.getOutputStream());
-			out.println("FAIL");
-			out.flush();
-			s.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 
 
 	@Override
@@ -92,7 +79,7 @@ public class ClientRequest extends Request{
 	public String encode() {
 		int id = -1;
 		if (sr == null) {
-			id = server.getServerId();
+			id = server.getId();
 		} else {
 			id = sr.getId();
 		}

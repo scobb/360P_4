@@ -21,7 +21,7 @@ public class RecoveryMessage extends Message{
 	public void communicate(BufferedReader in, PrintWriter out) throws IOException {
 		// send recover request
 		out.println(Server.SERVER);
-		out.println(Server.SERVER + " " + Server.RECOVER + " " + from.getClock() + " " + from.getServerId());
+		out.println(Server.SERVER + " " + Server.RECOVER + " " + from.getClock() + " " + from.getId());
 		out.flush();
 		
 	}

@@ -16,11 +16,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import message.Message;
+import message.RecoveryMessage;
 import message.RequestMessage;
 import record.FailureRecord;
 import record.ServerRecord;
 import request.ClientRequest;
-import request.RecoveryRequest;
 import request.Request;
 
 /**
@@ -34,7 +34,7 @@ public class Server {
 	// member variables
 	private int numServers;
 	private int clock;
-	private int serverId;
+	private int id;
 	private int numServed;
 	private int numRecoveriesReceived;
 	private ServerSocket tcpSocket;
@@ -145,8 +145,8 @@ public class Server {
 		return numServers;
 	}
 
-	public int getServerId() {
-		return serverId;
+	public int getId() {
+		return id;
 	}
 
 	public ServerSocket getTcpSocket() {
@@ -236,12 +236,13 @@ public class Server {
 		// update failure list
 		updateCurrentScheduledFailure();
 
-		// schedule a recoveryRecord
-		requests.add(new RecoveryRequest(this, null, this.clock,
-				this.numServers));
 
 		// restart the server
 		startServer();
+		
+		// request recovery
+		broadcastMessage(new RecoveryMessage(this, null));
+		System.out.println("Recovering...");
 	}
 
 	public void updateCurrentScheduledFailure() {
@@ -262,7 +263,7 @@ public class Server {
 		// split based on whitespace
 		String[] configList = config.split("\\s+");
 
-		serverId = Integer.parseInt(configList[0]);
+		id = Integer.parseInt(configList[0]);
 		numServers = Integer.parseInt(configList[1]);
 
 		// populate book map, 1-based indexing, with all books available
@@ -280,14 +281,14 @@ public class Server {
 	 */
 	public void startServer() {
 		try {
-			InetAddress addr = serverRecords.get(serverId - 1).getAddr();
+			InetAddress addr = serverRecords.get(id - 1).getAddr();
 			if (addr.isAnyLocalAddress() || addr.isLoopbackAddress()) {
 				System.out.println("Starting a server on port "
-						+ serverRecords.get(serverId - 1).getPort());
-				tcpSocket = new ServerSocket(serverRecords.get(serverId - 1)
+						+ serverRecords.get(id - 1).getPort());
+				tcpSocket = new ServerSocket(serverRecords.get(id - 1)
 						.getPort());
 				this.addr = addr;
-				this.port = serverRecords.get(serverId - 1).getPort();
+				this.port = serverRecords.get(id - 1).getPort();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -467,5 +468,10 @@ public class Server {
 		this.threadpool.submit(new StdInHandler(this, sc));
 		// TODO Auto-generated method stub
 
+	}
+
+	public void setId(int id) {
+		// TODO Auto-generated method stub
+		this.id = id;
 	}
 }

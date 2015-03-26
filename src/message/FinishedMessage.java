@@ -17,7 +17,7 @@ public class FinishedMessage extends Message {
 	@Override
 	public void communicate(BufferedReader in, PrintWriter out) throws IOException {
 		out.println("SERVER");
-		out.println("SERVER F " + from.getClock() + " " + from.getServerId());
+		out.println("SERVER F " + from.getClock() + " " + from.getId());
 	}
 
 	@Override

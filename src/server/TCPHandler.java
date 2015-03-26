@@ -5,16 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.SocketException;
-import java.util.Scanner;
 
 import record.ServerRecord;
 import request.ClientRequest;
-import request.RecoveryRequest;
 import request.Request;
 import request.RequestFactory;
 import request.SynchronizeRequest;
-import message.FinishedMessage;
 import message.RequestMessage;
 
 public class TCPHandler implements Runnable {

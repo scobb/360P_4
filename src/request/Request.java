@@ -43,12 +43,11 @@ public abstract class Request implements Comparable<Request> {
 	}
 	private int getId(){
 		if (server != null){
-			return server.getServerId();
+			return server.getId();
 		}
 		return sr.getId();
 	}
-	
-	abstract public void fail();
+
 	public String getMsg(){
 		return " ";
 	}
@@ -56,7 +55,7 @@ public abstract class Request implements Comparable<Request> {
 	public abstract void fulfillSilently(Server server);
 	public int compareTo(Request other) {
 		if (this.clock < other.clock
-				|| (this.clock == other.clock && this.server.getServerId() < other.server.getServerId())) {
+				|| (this.clock == other.clock && getId() < getId())) {
 			return -1;
 		}
 		return 1;
