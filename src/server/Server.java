@@ -297,7 +297,7 @@ public class Server {
 		int delta = Integer.parseInt(split[2]);
 		scheduledFailures.add(new FailureRecord(k, delta));
 		if (this.currentScheduledFailure == null) {
-			this.currentScheduledFailure = scheduledFailures.get(0);
+			this.currentScheduledFailure = scheduledFailures.remove(0);
 		}
 	}
 

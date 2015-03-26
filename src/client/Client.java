@@ -79,6 +79,7 @@ public class Client {
 
 			//System.out.println("Book: " + book + " Directive: " + directive);
 			String request = id + " " + book + " " + directive;
+			int failed = 0;
 
 			for (ServerRecord sr : servers) {
 				// process request
@@ -92,11 +93,16 @@ public class Client {
 //					System.out
 //							.println("Server connection failed... proceeding to next.");
 					// try the next server
+					++failed;
 					continue;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
+			if (failed == servers.size()) {
+				System.out.println("Was not handled.");
+			}
+			// System.out.println("done.");
 		}
 
 	}
