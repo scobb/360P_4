@@ -62,16 +62,6 @@ public class TCPHandler implements Runnable {
 				// request -- send back an acknowledgement
 				System.out.println("It was a request.");
 				server.getRequests().add(RequestFactory.decode(msg.split("%")[1]));
-//				ServerRecord sender = server.getServerRecords().get(
-//						Integer.parseInt(splitMsg[3]) - 1);
-//				if (msg != "") {
-//					server.getRequests().add(
-//							new ClientRequest(null, null, sender, clock, msg
-//									.split(":")[1], server.getNumServers()));
-//				} else {
-//					server.getRequests().add(
-//							new SynchronizeRequest(null, sender, clock, 0));
-//				}
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
 				out.println("OK");
 				out.flush();

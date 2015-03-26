@@ -164,13 +164,11 @@ public class Server {
 	public void broadcastMessage(Message m) {
 		System.out.println("Broadcasting...");
 		for (ServerRecord s : serverRecords) {
-			if (!s.equals(this) && s.isOnline()) {
+			if (!s.equals(this)) {
 				System.out.println("Broadcasting to " + s.getAddr() + ":"
 						+ s.getPort());
 				m.setTo(s);
 				m.send();
-			} else if (!s.isOnline()) {
-				m.ackReceived();
 			}
 		}
 		// if everyone else is offline, I might need to serve now.
@@ -188,7 +186,7 @@ public class Server {
 			// send request to other servers
 			broadcastMessage(new RequestMessage(this, cr, null));
 		}
-		
+
 	}
 
 	/**
@@ -220,9 +218,9 @@ public class Server {
 		for (String bookKey : bookMap.keySet()) {
 			bookMap.put(bookKey, AVAILABLE);
 		}
-		
+
 		// and all servers are alive, as far we know
-		for (ServerRecord sr : serverRecords){
+		for (ServerRecord sr : serverRecords) {
 			sr.setOnline(true);
 		}
 
@@ -237,8 +235,9 @@ public class Server {
 		updateCurrentScheduledFailure();
 
 		// schedule a recoveryRecord
-		requests.add(new RecoveryRequest(this, null, this.clock, this.numServers));
-		
+		requests.add(new RecoveryRequest(this, null, this.clock,
+				this.numServers));
+
 		// restart the server
 		startServer();
 	}
@@ -305,7 +304,7 @@ public class Server {
 		int k = Integer.parseInt(split[1]);
 		int delta = Integer.parseInt(split[2]);
 		scheduledFailures.add(new FailureRecord(k, delta));
-		if (this.currentScheduledFailure == null){
+		if (this.currentScheduledFailure == null) {
 			this.currentScheduledFailure = scheduledFailures.get(0);
 		}
 	}
@@ -323,7 +322,8 @@ public class Server {
 	public void route(Socket s) throws IOException {
 
 		System.out.println("Routing");
-		BufferedReader in = new BufferedReader(new InputStreamReader((s.getInputStream())));
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				(s.getInputStream())));
 		String switchVal = in.readLine();
 		System.out.println("switchVal: " + switchVal);
 		if (switchVal.equals(SERVER)) {
@@ -413,7 +413,9 @@ public class Server {
 	public void updateFromRemoteComplete() {
 		// remove next from queue and process, but don't output
 		System.out.println("Updating from complete. Fulfilling silently.");
-		requests.remove().fulfillSilently(this);
+		if (!requests.isEmpty()) {
+			requests.remove().fulfillSilently(this);
+		}
 	}
 
 	/**
@@ -449,7 +451,7 @@ public class Server {
 		for (int i = 0; i < s.numServers; ++i) {
 			s.addServerRecord(sc.nextLine(), i);
 		}
-		
+
 		// set up the listener thread for std in
 		s.listenForFailures(sc);
 
@@ -464,6 +466,6 @@ public class Server {
 		System.out.println("submitting std in handler...");
 		this.threadpool.submit(new StdInHandler(this, sc));
 		// TODO Auto-generated method stub
-		
+
 	}
 }
