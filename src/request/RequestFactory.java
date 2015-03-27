@@ -26,22 +26,15 @@ public class RequestFactory {
 	 */
 	public static Request decode(String code, Server s)
 			throws MalformedParametersException {
-		System.out.println("Decoding : " + code);
 		String[] fields = code.split("\\|");
 		switch (fields[0]) {
 		case "C": {
-//			System.out.println("Client request case.");
-//			for (int i = 1; i < fields.length; ++i) {
-//				System.out.println("fields[" + i + "]: " + fields[i]);
-//			}
 			return new ClientRequest(null, null, new ServerRecord(null,
 					Integer.parseInt(fields[1])), Integer.parseInt(fields[2]),
 					fields[3], Integer.parseInt(fields[4]));
 
 		}
 		case "S": {
-			// TODO - need to populate Server, not ServerRecord
-//			System.out.println("Synchronize request case.");
 			return new SynchronizeRequest(s, s.getServerRecords().get(
 					Integer.parseInt(fields[1])), Integer.parseInt(fields[2]),
 					Integer.parseInt(fields[3]));

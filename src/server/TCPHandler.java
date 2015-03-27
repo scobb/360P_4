@@ -32,7 +32,6 @@ public class TCPHandler implements Runnable {
 					socket.getInputStream()));
 			String msg = in.readLine();
 			// determine if this message came from client or server
-			System.out.println(msg.split("\\s+")[0]);
 			if (msg.split("\\s+")[0].trim().equals("SERVER")) {
 				this.handleServerMessage(msg);
 				socket.close();
@@ -47,11 +46,9 @@ public class TCPHandler implements Runnable {
 	}
 
 	public void handleServerMessage(String msg) {
-		System.out.println("Handling a server message: " + msg);
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split("\\s+");
 		String directive = splitMsg[1].trim();
-		System.out.println("Directive: " + directive);
 		int clock = Integer.parseInt(splitMsg[2]);
 		server.setClock(clock);
 
@@ -62,7 +59,6 @@ public class TCPHandler implements Runnable {
 		try {
 			if (directive.equals(Server.REQUEST)) {
 				// request -- send back an acknowledgement
-				System.out.println("It was a request.");
 				Request r = RequestFactory.decode(msg.split("%")[1], server);
 				if (!server.getRequests().contains(r)) {
 					server.getRequests().add(r);
@@ -73,27 +69,18 @@ public class TCPHandler implements Runnable {
 				server.serveIfReady();
 
 			} else if (directive.equals(Server.RECOVER)) {
-				System.out.println("It was a recover.");
 				ServerRecord sender = server.getServerRecords().get(
 						Integer.parseInt(splitMsg[3]));
 				PrintWriter out = new PrintWriter(socket.getOutputStream());
-				System.out.println("Sending them my clock of " + server.getClock());
 				out.println(server.getClock());
 				out.flush();
 				out.close();
-
-//				// schedule synchronize request
-//				SynchronizeRequest sr = new SynchronizeRequest(server, sender,
-//						clock, server.getNumServers());
-//				server.getRequests().add(sr);
-//				server.broadcastMessage(new RequestMessage(server, sr, null));
 
 			} else if (directive.equals(Server.SYNCHRONIZE)) {
 				// get book data
 				String[] msgData = msg.split(":");
 
 				String bookDataString = msgData[1];
-				System.out.println("Got book data: " + bookDataString);
 
 				// populate our book map from that data -- should be the same
 				// from all other servers
@@ -106,26 +93,14 @@ public class TCPHandler implements Runnable {
 					// TODO - be friendly.. Need to test that this works with
 					// multiple servers.
 					String requestDataString = msgData[2];
-					System.out.println("Got requestData: " + requestDataString);
 					server.getRequests().clear();
-					System.out.println("Before updating requests: "
-							+ server.getRequests());
 					String[] requestData = requestDataString.split("_");
 					for (int i = 0; i < requestData.length; ++i) {
 						Request r = RequestFactory.decode(requestData[i], server);
 						server.getRequests().add(r);
-//						if (!server.getRequests().contains(r)) {
-//							server.getRequests().add(r);
-//						}
 					}
-					System.out.println("Done updating requests: "
-							+ server.getRequests());
-					// System.out.println("server.getRequests().size(): " +
-					// server.getRequests().size());
 
-				} else {
-					System.out.println("No client data.");
-				}
+				} 
 				// increment the number of recoveries received to know whether
 				// we're healthy enough to serve clients
 				server.recoveryReceived();
@@ -133,8 +108,6 @@ public class TCPHandler implements Runnable {
 				
 
 			} else {
-
-				System.out.println("It was something else.");
 				// remote server finished serving---update database to stay in
 				// line
 				server.updateFromRemoteComplete();
@@ -149,18 +122,14 @@ public class TCPHandler implements Runnable {
 	}
 
 	public void handleClientMessage(String msg) {
-		System.out.println("Handling client msg: " + msg);
 		if (server.hasRecovered()) {
-			System.out.println("Server is healthy!");
 			ClientRequest cr = new ClientRequest(socket, server, null,
 					server.getClock(), msg, server.getNumServers());
 			server.getRequests().add(cr);
 
 			// send requests to other servers
 			server.broadcastMessage(new RequestMessage(server, cr, null));
-		} else {
-			System.out.println("NOT HEALTHY!");
-		}
+		} 
 		// Otherwise, we'll let the message time out and go to another server
 	}
 }

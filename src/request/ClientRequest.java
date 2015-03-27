@@ -30,7 +30,6 @@ public class ClientRequest extends Request{
 		PrintWriter out;
 		try {
 			out = new PrintWriter(s.getOutputStream());
-			System.out.println("Writing to client: " + result );
 			out.println(result);
 			out.flush();
 			out.close();
@@ -55,8 +54,6 @@ public class ClientRequest extends Request{
 			out.println("WAIT");
 			out.flush();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

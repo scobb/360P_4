@@ -20,8 +20,6 @@ public class SynchronizeRequest extends Request {
 	public void fulfill() {
 		if (server.getId() != sr.getId()) {
 			// send Synchronize message
-			System.out.println("Trying to send a message from server "
-					+ server.getId() + " to server " + sr.getId());
 			SynchronizeMessage m = new SynchronizeMessage(server, sr);
 			m.send();
 	
@@ -29,11 +27,10 @@ public class SynchronizeRequest extends Request {
 			fulfilled = true;
 			sr.setOnline(true);
 		} else {
-			System.out.println("Finishing this request for me.");
-			System.out.println("My queue: " + server.getRequests());
+			// finish for me
 			server.getRequests().remove();
-			System.out.println("My queue: " + server.getRequests());
-			System.out.println("finishing this req for everyone else...");
+			
+			// finish for everyone else
 			server.broadcastMessage(new FinishedMessage(server, null));
 		}
 	}

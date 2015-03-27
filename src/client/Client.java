@@ -64,7 +64,6 @@ public class Client {
 		// did we receive a sleep instruction?
 		if (cmdSplit[0].equals(SLEEP)) {
 			// if so, put the thread to sleep for the requested time
-			//System.out.println("Sleeping...");
 			try {
 				Thread.sleep(Integer.parseInt(cmdSplit[1]));
 			} catch (NumberFormatException e) {
@@ -77,9 +76,7 @@ public class Client {
 			String book = cmdSplit[0];
 			String directive = cmdSplit[1];
 
-			//System.out.println("Book: " + book + " Directive: " + directive);
 			String request = id + " " + book + " " + directive;
-			int failed = 0;
 
 			for (ServerRecord sr : servers) {
 				// process request
@@ -90,19 +87,11 @@ public class Client {
 					// if we get here, we can break the loop
 					break;
 				} catch (IOException e) {
-//					System.out
-//							.println("Server connection failed... proceeding to next.");
-					// try the next server
-					++failed;
 					continue;
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			if (failed == servers.size()) {
-				System.out.println("Was not handled.");
-			}
-			// System.out.println("done.");
 		}
 
 	}
@@ -172,8 +161,6 @@ public class Client {
 		for (int i = 0; i < c.numServers; ++i) {
 			c.servers.add(new ServerRecord(sc.nextLine(), i));
 		}
-
-		System.out.println("Client initialized.");
 
 		// go until user enters an empty line.
 		while (true) {

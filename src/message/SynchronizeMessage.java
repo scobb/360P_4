@@ -29,7 +29,6 @@ public class SynchronizeMessage extends Message {
 		// encode book data
 		String bookStr = "";
 		String prefix = "";
-		System.out.println("----------");
 		for (int i = 0; i < from.getBookMap().size(); ++i){
 			bookStr += (prefix + from.getBookMap().get("b" + (i + 1)));
 			prefix = "_";
@@ -48,7 +47,6 @@ public class SynchronizeMessage extends Message {
 		// send encoded recovery with books and clients.
 		out.println(Server.SERVER + " " + Server.SYNCHRONIZE + " "
 				+ from.getClock() + " " + from.getId() + " :" + bookStr + ":" + requestStr);
-		System.out.println("Finished with teh Synch request....");
 		
 
 	}

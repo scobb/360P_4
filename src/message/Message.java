@@ -7,7 +7,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.Scanner;
 
 import record.ServerRecord;
 import server.Server;
