@@ -69,7 +69,7 @@ public abstract class Request implements Comparable<Request> {
 
 	public int compareTo(Request other) {
 		if (this.clock < other.clock
-				|| (this.clock == other.clock && getId() < getId())) {
+				|| (this.clock == other.clock && getId() < other.getId())) {
 			return -1;
 		}
 		return 1;
