@@ -13,7 +13,11 @@ import request.RequestFactory;
 import request.SynchronizeRequest;
 import message.FinishedMessage;
 import message.RequestMessage;
-
+/**
+ * TCPHandler - used to listen to input from socket.
+ * We don't make use of the runnable capability in this implementation.
+ *
+ */
 public class TCPHandler implements Runnable {
 	// member vars
 	Socket socket;
@@ -44,7 +48,10 @@ public class TCPHandler implements Runnable {
 			e.printStackTrace();
 		}
 	}
-
+	/**handleServerMessage - properly parses and processes a server message
+	 * 
+	 * @param msg String message from server
+	 */
 	public void handleServerMessage(String msg) {
 		// if from server, is it an ack, req, or finished?
 		String[] splitMsg = msg.split("\\s+");
@@ -121,6 +128,10 @@ public class TCPHandler implements Runnable {
 
 	}
 
+	/**
+	 * handleClientMessage - properly decodes and processes a message from client
+	 * @param msg String to be decoded
+	 */
 	public void handleClientMessage(String msg) {
 		if (server.hasRecovered()) {
 			ClientRequest cr = new ClientRequest(socket, server, null,

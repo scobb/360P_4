@@ -4,7 +4,10 @@ import message.FinishedMessage;
 import message.SynchronizeMessage;
 import record.ServerRecord;
 import server.Server;
-
+/**
+ * SynchronizeRequest - the request that reserves time for a server to regain state
+ *
+ */
 public class SynchronizeRequest extends Request {
 	boolean fulfilled = false;
 	public SynchronizeRequest(Server server, ServerRecord sr, int clock,

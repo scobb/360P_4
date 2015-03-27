@@ -7,7 +7,10 @@ import java.net.Socket;
 import message.FinishedMessage;
 import record.ServerRecord;
 import server.Server;
-
+/**
+ * ClientRequest - the primary request. From a client, requesting service
+ *
+ */
 public class ClientRequest extends Request{
 	private Socket s;
 	private String reqString;

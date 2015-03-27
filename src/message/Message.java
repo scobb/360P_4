@@ -10,7 +10,10 @@ import java.net.SocketTimeoutException;
 
 import record.ServerRecord;
 import server.Server;
-
+/**
+ * Message - provides the interface for all messages
+ *
+ */
 public abstract class Message {
 	protected Server from;
 	protected ServerRecord to;
@@ -30,10 +33,22 @@ public abstract class Message {
 	
 	abstract public void ping();
 
+	/**
+	 * communicate - implementation specific i/o
+	 * @param in
+	 * @param out
+	 * @throws IOException
+	 */
 	public abstract void communicate(BufferedReader in, PrintWriter out) throws IOException;
 
+	/**
+	 * handleTimeout - implementation specific behavior when a timeout occurs
+	 */
 	public abstract void handleTimeout();
-
+	
+	/**
+	 * send - the connecting is done here for all messages.
+	 */
 	public void send() {
 		Socket s = null;
 		try {

@@ -4,7 +4,10 @@ import java.net.Socket;
 
 import record.ServerRecord;
 import server.Server;
-
+/**
+ * Request - defines the interface for our events to be completed
+ *
+ */
 public abstract class Request implements Comparable<Request> {
 	protected int clock;
 	protected int acksReceived;

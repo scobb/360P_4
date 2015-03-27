@@ -2,7 +2,10 @@ package server;
 
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-
+/**
+ * StdInHandler - Used to read from command line
+ *
+ */
 public class StdInHandler implements Runnable{
 	Server s;
 	Scanner in;

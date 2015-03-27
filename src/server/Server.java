@@ -161,6 +161,10 @@ public class Server {
 		scheduledClientRequests.add(cr);
 	}
 
+	/**
+	 * broadcastMessage - sends message to all other servers
+	 * @param m Message object to be sent
+	 */
 	public void broadcastMessage(Message m) {
 		for (ServerRecord s : serverRecords) {
 			if (!s.equals(this) && s.isOnline()) {
@@ -232,6 +236,9 @@ public class Server {
 		// now we wait for everyone to send me the sync info
 	}
 
+	/**
+	 * updateCurrentScheduledFailure - Goes to the next failure.
+	 */
 	public void updateCurrentScheduledFailure() {
 		if (scheduledFailures.size() > 0) {
 			currentScheduledFailure = scheduledFailures.remove(0);
@@ -306,6 +313,11 @@ public class Server {
 		serverRecords.add(new ServerRecord(s, id));
 	}
 
+	/**
+	 * route - top-level message handling.
+	 * @param s socket handle for new message
+	 * @throws IOException
+	 */
 	public void route(Socket s) throws IOException {
 
 		++clock;
@@ -463,7 +475,4 @@ public class Server {
 		this.threadpool.submit(new StdInHandler(this, sc));
 	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
 }
